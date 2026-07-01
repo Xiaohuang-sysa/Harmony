@@ -7,6 +7,13 @@ export class PlaylistDetailParams {
   static title: string = '';
   static coverImgUrl: string = '';
   static description: string = '';
+
+  static reset(): void {
+    PlaylistDetailParams.id = 0;
+    PlaylistDetailParams.title = '';
+    PlaylistDetailParams.coverImgUrl = '';
+    PlaylistDetailParams.description = '';
+  }
 }
 
 interface PlaylistNavParam {
@@ -44,6 +51,8 @@ export struct PlaylistDetailPage {
     this.playlistName = PlaylistDetailParams.title;
     this.coverUrl = PlaylistDetailParams.coverImgUrl;
     this.desc = PlaylistDetailParams.description;
+
+    PlaylistDetailParams.reset();
 
     if (playlistId > 0) {
       await this.loadSongs(playlistId);
@@ -93,7 +102,7 @@ export struct PlaylistDetailPage {
                 .textOverflow({ overflow: TextOverflow.Ellipsis })
                 .width('100%')
 
-              if (this.desc.length > 0) {
+              if (this.desc && this.desc.length > 0) {
                 Text(this.desc)
                   .fontSize(12)
                   .fontColor('rgba(255,255,255,0.5)')

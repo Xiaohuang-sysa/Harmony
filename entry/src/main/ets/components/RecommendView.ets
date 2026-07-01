@@ -173,7 +173,7 @@ export struct RecommendView {
                   PlaylistDetailParams.id = item.id;
                   PlaylistDetailParams.title = item.name;
                   PlaylistDetailParams.coverImgUrl = item.coverImgUrl;
-                  PlaylistDetailParams.description = item.description;
+                  PlaylistDetailParams.description = item.description || '';
                   this.pathStack.pushPath({ name: 'PlaylistDetailPage' });
                 })
               }, (item: Playlist) => item.id.toString())
