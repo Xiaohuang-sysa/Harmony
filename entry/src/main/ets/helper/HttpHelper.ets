@@ -17,8 +17,17 @@ interface BannerResponse {
   banners: BannerItem[];
 }
 
+interface PersonalizedPlaylistItem {
+  id: number;
+  name: string;
+  picUrl: string;
+  description: string;
+  trackCount: number;
+  coverImgUrl?: string;
+}
+
 interface PersonalizedResponse {
-  result: Playlist[];
+  result: PersonalizedPlaylistItem[];
 }
 
 interface RecommendSongsData {
@@ -230,7 +239,17 @@ export class HttpHelper {
       const res = await HttpHelper.get(url);
       const json = JSON.parse(res) as PersonalizedResponse;
       if (json && json.result) {
-        return json.result;
+        const playlists: Playlist[] = [];
+        for (const item of json.result) {
+          const p = new Playlist();
+          p.id = item.id;
+          p.name = item.name;
+          p.coverImgUrl = item.picUrl || item.coverImgUrl || '';
+          p.description = item.description || '';
+          p.trackCount = item.trackCount || 0;
+          playlists.push(p);
+        }
+        return playlists;
       }
       return [];
     } catch (err) {
