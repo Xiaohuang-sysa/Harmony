@@ -1,20 +1,21 @@
 import { HttpHelper } from '../helper/HttpHelper';
+import { AvPlayerHelper } from '../helper/AvPlayerHelper';
 import { AppConstants } from '../constants/AppConstants';
 import { UserInfo } from '../entity/UserInfo';
-import { Playlist } from '../entity/Playlist';
+import { Song } from '../entity/Song';
 import { ArtistParams } from '../pages/ArtistPage';
 import { AlbumParams } from '../pages/AlbumDetailPage';
 
 @Component
 export struct MineView {
   @Consume('pathStack') pathStack: NavPathStack;
+  @StorageProp('play_history') playHistory: Song[] = [];
 
   @State userInfo: UserInfo = new UserInfo();
-  @State createdPlaylists: Playlist[] = [];
 
   async aboutToAppear() {
     this.loadFromCache();
-    if (this.userInfo.nickname === '' || this.createdPlaylists.length === 0) {
+    if (this.userInfo.nickname === '') {
       await this.refreshData();
     }
   }
@@ -24,26 +25,13 @@ export struct MineView {
     if (userStr) {
       try { this.userInfo = JSON.parse(userStr); } catch (e) {}
     }
-    const playlistsStr = AppStorage.get<string>(AppConstants.CACHE_PLAYLISTS);
-    if (playlistsStr) {
-      try { this.createdPlaylists = JSON.parse(playlistsStr); } catch (e) {}
-    }
   }
 
   async refreshData(): Promise<void> {
-    const results = await Promise.all([
-      HttpHelper.fetchUserDetail(12345),
-      HttpHelper.fetchPersonalizedPlaylists()
-    ]);
-    const user = results[0] as UserInfo;
-    const playlists = results[1] as Playlist[];
+    const user = await HttpHelper.fetchUserDetail(12345) as UserInfo;
     if (user.nickname !== '') {
       this.userInfo = user;
       AppStorage.set<string>(AppConstants.CACHE_USER, JSON.stringify(user));
-    }
-    if (playlists.length > 0) {
-      this.createdPlaylists = playlists;
-      AppStorage.set<string>(AppConstants.CACHE_PLAYLISTS, JSON.stringify(playlists));
     }
     AppStorage.set<number>(AppConstants.CACHE_FETCH_TIME, Date.now());
   }
@@ -51,7 +39,6 @@ export struct MineView {
   build() {
     Scroll() {
       Column() {
-        // User Profile Header
         Row() {
           Image(this.userInfo.avatarUrl)
             .width(64)
@@ -60,7 +47,6 @@ export struct MineView {
             .backgroundColor('#E5E5E5')
             .objectFit(ImageFit.Cover)
             .onError(() => {
-              // fallback to backgroundColor
             })
 
           Column() {
@@ -91,7 +77,6 @@ export struct MineView {
         .padding({ top: 32, bottom: 20, left: 20, right: 20 })
         .alignItems(VerticalAlign.Center)
 
-        // Statistics
         Row() {
           this.StatItem('关注', this.userInfo.follows.toString())
           this.StatItem('粉丝', this.userInfo.followeds.toString())
@@ -101,7 +86,6 @@ export struct MineView {
         .padding({ left: 20, right: 20, bottom: 24 })
         .justifyContent(FlexAlign.SpaceAround)
 
-        // Primary Entrances Grid
         Row() {
           this.EntranceItem($r('sys.symbol.music'), '本地音乐', 'LocalMusicPage')
           this.EntranceItem($r('sys.symbol.cloud'), '云同步', 'CloudSyncPage')
@@ -115,7 +99,6 @@ export struct MineView {
         .borderRadius(24)
         .margin({ bottom: 12 })
 
-        // Artist & Album Entrances
         Row() {
           Column() {
             SymbolGlyph($r('sys.symbol.person'))
@@ -154,69 +137,76 @@ export struct MineView {
         .borderRadius(24)
         .margin({ bottom: 20 })
 
-        // Created Playlists Section
         Column() {
           Row() {
-            Text('自建歌单')
-              .fontSize(16)
-              .fontWeight(FontWeight.Medium)
-              .fontColor('#1A1A1A')
+            Text('最近播放')
+              .fontSize(18)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#ff000000')
             Blank()
-            SymbolGlyph($r('sys.symbol.plus'))
-              .fontSize(24)
-              .fontColor(['#666666'])
-              .onClick(() => {
-                // Handle create playlist
-              })
+            Text('更多 >')
+              .fontSize(12)
+              .fontColor('#ff999999')
           }
           .width('100%')
-          .padding({ left: 16, right: 16, top: 16, bottom: 8 })
-
-          List() {
-            ForEach(this.createdPlaylists, (item: Playlist) => {
-              ListItem() {
-                Row() {
-                  Image(item.coverImgUrl)
-                    .width(48)
-                    .height(48)
+          
+          if (this.playHistory.length === 0) {
+            Column({ space: 8 }) {
+              SymbolGlyph($r('sys.symbol.music'))
+                .fontSize(32)
+                .fontColor(['#ffcccccc'])
+              Text('暂无播放记录')
+                .fontSize(14)
+                .fontColor('#ff999999')
+            }
+            .width('100%')
+            .padding({ top: 20, bottom: 20 })
+            .justifyContent(FlexAlign.Center)
+          } else {
+            Column({ space: 10 }) {
+              ForEach(this.playHistory, (item: Song) => {
+                Row({ space: 12 }) {
+                  Image(item.al?.picUrl)
+                    .width(52)
+                    .height(52)
+                    .backgroundColor('#ffeeeeee')
                     .borderRadius(12)
-                    .backgroundColor('#F0F0F0')
                     .objectFit(ImageFit.Cover)
                     .onError(() => {
-                      // fallback to backgroundColor
                     })
                   
-                  Column() {
+                  Column({ space: 6 }) {
                     Text(item.name)
                       .fontSize(15)
-                      .fontColor('#1A1A1A')
+                      .fontWeight(FontWeight.Medium)
+                      .fontColor('#ff333333')
                       .maxLines(1)
                       .textOverflow({ overflow: TextOverflow.Ellipsis })
-                    Text(`${item.trackCount} 首`)
+                    Text(item.ar && item.ar.length > 0 ? item.ar.map(a => a.name).join(' / ') : '未知歌手')
                       .fontSize(12)
-                      .fontColor('#999999')
-                      .margin({ top: 4 })
+                      .fontColor('#ff999999')
+                      .maxLines(1)
+                      .textOverflow({ overflow: TextOverflow.Ellipsis })
                   }
                   .alignItems(HorizontalAlign.Start)
-                  .margin({ left: 12 })
                   .layoutWeight(1)
-
+                  
                   SymbolGlyph($r('sys.symbol.more'))
-                    .fontSize(24)
-                    .fontColor(['#999999'])
+                    .fontSize(20)
+                    .fontColor(['#ff999999'])
                 }
                 .width('100%')
-                .padding({ left: 16, right: 16, top: 10, bottom: 10 })
+                .padding(12)
+                .backgroundColor('#fff9f9f9')
+                .borderRadius(16)
                 .onClick(() => {
-                  class Param { id: number = 0; }
-                  let p = new Param();
-                  p.id = item.id;
-                  this.pathStack.pushPathByName('PlaylistDetailPage', p);
+                  AvPlayerHelper.playMusic(item);
+                  this.pathStack.pushPath({ name: 'PlayerPage' });
                 })
-              }
-            }, (item: Playlist) => item.id.toString())
+              }, (item: Song) => item.id.toString())
+            }
+            .width('100%')
           }
-          .width('100%')
         }
         .width('100%')
         .backgroundColor(Color.White)
@@ -224,7 +214,7 @@ export struct MineView {
         .padding({ bottom: 12 })
       }
       .width('100%')
-      .padding({ left: 16, right: 16, top: 12, bottom: 120 }) // Safe area for mini player and bottom tabs
+      .padding({ left: 16, right: 16, top: 12, bottom: 120 })
     }
     .width('100%')
     .height('100%')
@@ -251,7 +241,7 @@ export struct MineView {
     Column() {
       SymbolGlyph(icon)
         .fontSize(28)
-        .fontColor(['#E3323D']) // Themed primary color
+        .fontColor(['#E3323D'])
         .margin({ bottom: 8 })
       Text(label)
         .fontSize(12)

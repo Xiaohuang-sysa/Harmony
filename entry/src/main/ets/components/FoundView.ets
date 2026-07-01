@@ -2,8 +2,8 @@ import { HttpHelper } from '../helper/HttpHelper';
 import { AvPlayerHelper } from '../helper/AvPlayerHelper';
 import { AppConstants } from '../constants/AppConstants';
 import { BannerItem } from '../entity/BannerItem';
-import { Playlist } from '../entity/Playlist';
 import { Song } from '../entity/Song';
+import { PlaylistDetailParams } from '../pages/PlaylistDetailPage';
 
 @Component
 export struct FoundView {
@@ -11,13 +11,10 @@ export struct FoundView {
   private swiperController: SwiperController = new SwiperController();
 
   @State banners: BannerItem[] = [];
-  @State playlists: Playlist[] = [];
   @State songs: Song[] = [];
 
   async aboutToAppear() {
-    // 优先从 AppStorage 缓存恢复数据（避免 Tab 切换时数据丢失）
     this.loadFromCache();
-    // 只在首次加载或缓存过期时拉取新数据
     if (this.banners.length === 0) {
       await this.refreshData();
     }
@@ -26,19 +23,13 @@ export struct FoundView {
   async refreshData(): Promise<void> {
     const results = await Promise.all([
       HttpHelper.fetchBanners(),
-      HttpHelper.fetchPersonalizedPlaylists(),
       HttpHelper.fetchDailyRoam()
     ]);
     const banners = results[0] as BannerItem[];
-    const playlists = results[1] as Playlist[];
-    const songs = results[2] as Song[];
+    const songs = results[1] as Song[];
     if (banners.length > 0) {
       this.banners = banners;
       AppStorage.set<string>(AppConstants.CACHE_BANNERS, JSON.stringify(banners));
-    }
-    if (playlists.length > 0) {
-      this.playlists = playlists;
-      AppStorage.set<string>(AppConstants.CACHE_PLAYLISTS, JSON.stringify(playlists));
     }
     if (songs.length > 0) {
       this.songs = songs;
@@ -52,10 +43,6 @@ export struct FoundView {
     if (bannersStr) {
       try { this.banners = JSON.parse(bannersStr); } catch (e) {}
     }
-    const playlistsStr = AppStorage.get<string>(AppConstants.CACHE_PLAYLISTS);
-    if (playlistsStr) {
-      try { this.playlists = JSON.parse(playlistsStr); } catch (e) {}
-    }
     const songsStr = AppStorage.get<string>(AppConstants.CACHE_RECENT_SONGS);
     if (songsStr) {
       try { this.songs = JSON.parse(songsStr); } catch (e) {}
@@ -65,7 +52,6 @@ export struct FoundView {
   build() {
     Scroll() {
       Column({ space: 24 }) {
-        // 顶部搜索框
         Row() {
           Row({ space: 8 }) {
             SymbolGlyph($r('sys.symbol.magnifyingglass'))
@@ -89,7 +75,6 @@ export struct FoundView {
           this.pathStack.pushPath({ name: 'SearchPage' });
         })
 
-        // Banner 轮播图
         Swiper(this.swiperController) {
           ForEach(this.banners, (item: BannerItem) => {
             this.BannerCard(item)
@@ -111,30 +96,18 @@ export struct FoundView {
         .itemSpace(16)
         .padding({ left: 16, right: 16 })
 
-        // 推荐歌单
-        this.SectionTitle('推荐歌单')
-        
-        Flex({ wrap: FlexWrap.Wrap, justifyContent: FlexAlign.SpaceBetween }) {
-          ForEach(this.playlists, (item: Playlist) => {
-            this.PlaylistCard(item)
-          }, (item: Playlist) => item.id.toString())
-        }
-        .width('100%')
-        .padding({ left: 16, right: 16 })
-        
-        // 发现新音乐
         this.SectionTitle('发现新音乐')
 
         Column({ space: 16 }) {
-          ForEach(this.songs.slice(0, 5), (item: Song, index: number) => {
+          ForEach(this.songs, (item: Song, index: number) => {
             this.NewReleaseItem((index + 1).toString(), item)
           }, (item: Song) => item.id.toString())
         }
         .width('100%')
-        .padding({ left: 16, right: 16, bottom: 80 }) // 留出底部 TabBar 的空间
+        .padding({ left: 16, right: 16, bottom: 80 })
       }
       .width('100%')
-      .backgroundColor('#FAFAFA') // 微弱的背景色，使卡片和白色元素更突出
+      .backgroundColor('#FAFAFA')
     }
     .width('100%')
     .height('100%')
@@ -152,7 +125,6 @@ export struct FoundView {
         .objectFit(ImageFit.Cover)
         .backgroundColor('#E8E8E8')
         .onError(() => {
-          // fallback to backgroundColor
         })
       
       Column() {
@@ -192,56 +164,13 @@ export struct FoundView {
       .borderRadius(14)
       .shadow({ radius: 4, color: 'rgba(0,0,0,0.03)', offsetY: 2 })
       .onClick(() => {
-        // do nothing for now
+        this.pathStack.pushPath({ name: 'DailyRecommendPage' });
       })
     }
     .width('100%')
     .justifyContent(FlexAlign.SpaceBetween)
     .alignItems(VerticalAlign.Center)
     .padding({ left: 16, right: 16, top: 8 })
-  }
-
-  @Builder
-  PlaylistCard(item: Playlist) {
-    Column() {
-      Stack({ alignContent: Alignment.TopEnd }) {
-        Image(item.coverImgUrl)
-          .width('100%')
-          .aspectRatio(1)
-          .borderRadius(16)
-          .objectFit(ImageFit.Cover)
-          .backgroundColor('#EEEEEE')
-          .shadow({ radius: 8, color: 'rgba(0,0,0,0.08)', offsetY: 4 })
-          .onError(() => {
-            // fallback to backgroundColor
-          })
-          
-        Row({ space: 4 }) {
-          SymbolGlyph($r('sys.symbol.play_fill'))
-            .fontSize(10)
-            .fontColor([Color.White])
-          Text(item.trackCount > 0 ? `${item.trackCount}` : '推荐')
-            .fontSize(10)
-            .fontColor(Color.White)
-            .fontWeight(FontWeight.Bold)
-        }
-        .padding({ top: 6, bottom: 6, left: 8, right: 8 })
-        .backgroundColor('rgba(0,0,0,0.25)')
-        .borderRadius({ bottomLeft: 12, topRight: 16 })
-        .backdropBlur(10)
-      }
-      
-      Text(item.name)
-        .fontSize(14)
-        .fontWeight(FontWeight.Medium)
-        .fontColor('#2C2C2C')
-        .margin({ top: 10 })
-        .maxLines(2)
-        .textOverflow({ overflow: TextOverflow.Ellipsis })
-    }
-    .width('31%')
-    .margin({ bottom: 20 })
-    .alignItems(HorizontalAlign.Start)
   }
 
   @Builder
@@ -265,7 +194,6 @@ export struct FoundView {
             .objectFit(ImageFit.Cover)
             .shadow({ radius: 6, color: 'rgba(0,0,0,0.06)', offsetY: 3 })
             .onError(() => {
-              // fallback to backgroundColor
             })
           
           SymbolGlyph($r('sys.symbol.play_fill'))
