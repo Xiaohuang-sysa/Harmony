@@ -1,18 +1,22 @@
 import { HttpHelper } from '../helper/HttpHelper';
 import { AvPlayerHelper } from '../helper/AvPlayerHelper';
+import { StorageHelper } from '../helper/StorageHelper';
 import { AppConstants } from '../constants/AppConstants';
 import { UserInfo } from '../entity/UserInfo';
-import { ArtistParams } from '../pages/ArtistPage';
-import { AlbumParams } from '../pages/AlbumDetailPage';
+import { Playlist } from '../entity/Playlist';
 
 @Component
 export struct MineView {
   @Consume('pathStack') pathStack: NavPathStack;
+  @StorageProp('custom_playlists') customPlaylists: Playlist[] = [];
 
   @State userInfo: UserInfo = new UserInfo();
+  @State showCreateDialog: boolean = false;
+  @State newPlaylistName: string = '';
 
   async aboutToAppear() {
     this.loadFromCache();
+    await StorageHelper.loadCustomPlaylists();
     if (this.userInfo.nickname === '') {
       await this.refreshData();
     }
@@ -32,6 +36,14 @@ export struct MineView {
       AppStorage.set<string>(AppConstants.CACHE_USER, JSON.stringify(user));
     }
     AppStorage.set<number>(AppConstants.CACHE_FETCH_TIME, Date.now());
+  }
+
+  async createPlaylist(): Promise<void> {
+    if (this.newPlaylistName.trim()) {
+      await StorageHelper.createPlaylist(this.newPlaylistName.trim());
+      this.newPlaylistName = '';
+      this.showCreateDialog = false;
+    }
   }
 
   build() {
@@ -84,6 +96,99 @@ export struct MineView {
         .padding({ left: 20, right: 20, bottom: 24 })
         .justifyContent(FlexAlign.SpaceAround)
 
+        Column() {
+          Row() {
+            Text('自建歌单')
+              .fontSize(18)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#ff000000')
+            Blank()
+            Row({ space: 4 }) {
+              SymbolGlyph($r('sys.symbol.add'))
+                .fontSize(16)
+                .fontColor(['#E3323D'])
+              Text('新建')
+                .fontSize(12)
+                .fontColor('#E3323D')
+            }
+            .padding({ left: 10, right: 10, top: 4, bottom: 4 })
+            .backgroundColor('#FFF0F0')
+            .borderRadius(14)
+            .onClick(() => {
+              this.showCreateDialog = true;
+            })
+          }
+          .width('100%')
+          
+          if (this.customPlaylists.length === 0) {
+            Column({ space: 8 }) {
+              SymbolGlyph($r('sys.symbol.music'))
+                .fontSize(32)
+                .fontColor(['#ffcccccc'])
+              Text('暂无自建歌单，点击新建创建')
+                .fontSize(14)
+                .fontColor('#ff999999')
+            }
+            .width('100%')
+            .padding({ top: 20, bottom: 20 })
+            .justifyContent(FlexAlign.Center)
+          } else {
+            Column({ space: 12 }) {
+              ForEach(this.customPlaylists, (item: Playlist) => {
+                Row({ space: 12 }) {
+                  Stack({ alignContent: Alignment.Center }) {
+                    Image(item.coverImgUrl)
+                      .width(60)
+                      .height(60)
+                      .borderRadius(12)
+                      .backgroundColor('#ffeeeeee')
+                      .objectFit(ImageFit.Cover)
+                      .onError(() => {
+                      })
+                    if (!item.coverImgUrl) {
+                      SymbolGlyph($r('sys.symbol.music'))
+                        .fontSize(24)
+                        .fontColor(['#ff999999'])
+                    }
+                  }
+                  
+                  Column({ space: 6 }) {
+                    Text(item.name)
+                      .fontSize(15)
+                      .fontWeight(FontWeight.Medium)
+                      .fontColor('#ff333333')
+                      .maxLines(1)
+                      .textOverflow({ overflow: TextOverflow.Ellipsis })
+                    Text(`${item.trackCount} 首歌曲`)
+                      .fontSize(12)
+                      .fontColor('#ff999999')
+                  }
+                  .alignItems(HorizontalAlign.Start)
+                  .layoutWeight(1)
+                  
+                  SymbolGlyph($r('sys.symbol.more'))
+                    .fontSize(20)
+                    .fontColor(['#ff999999'])
+                }
+                .width('100%')
+                .padding(12)
+                .backgroundColor('#fff9f9f9')
+                .borderRadius(16)
+                .onClick(() => {
+                  AppStorage.set<number>('current_playlist_id', item.id);
+                  this.pathStack.pushPath({ name: 'CustomPlaylistPage' });
+                })
+              }, (item: Playlist) => item.id.toString())
+            }
+            .width('100%')
+          }
+        }
+        .width('100%')
+        .backgroundColor(Color.White)
+        .borderRadius(24)
+        .padding({ bottom: 12 })
+        .margin({ bottom: 12 })
+
         Row() {
           this.EntranceItem($r('sys.symbol.music'), '本地音乐', 'LocalMusicPage')
           this.EntranceItem($r('sys.symbol.cloud'), '云同步', 'CloudSyncPage')
@@ -96,71 +201,6 @@ export struct MineView {
         .backgroundColor(Color.White)
         .borderRadius(24)
         .margin({ bottom: 12 })
-
-        Row() {
-          Column() {
-            SymbolGlyph($r('sys.symbol.person'))
-              .fontSize(28)
-              .fontColor(['#E3323D'])
-              .margin({ bottom: 8 })
-            Text('歌手')
-              .fontSize(12)
-              .fontColor('#333333')
-          }
-          .width('25%')
-          .onClick(() => {
-            this.pathStack.pushPath({ name: 'ArtistPage' });
-          })
-          Column() {
-            SymbolGlyph($r('sys.symbol.rectangle_stack'))
-              .fontSize(28)
-              .fontColor(['#E3323D'])
-              .margin({ bottom: 8 })
-            Text('专辑')
-              .fontSize(12)
-              .fontColor('#333333')
-          }
-          .width('25%')
-          .onClick(() => {
-            this.pathStack.pushPath({ name: 'AlbumDetailPage' });
-          })
-          Column()
-            .width('25%')
-          Column()
-            .width('25%')
-        }
-        .width('100%')
-        .padding({ top: 12, bottom: 12 })
-        .backgroundColor(Color.White)
-        .borderRadius(24)
-        .margin({ bottom: 20 })
-
-        Column() {
-          Row() {
-            Text('自建歌单')
-              .fontSize(18)
-              .fontWeight(FontWeight.Bold)
-              .fontColor('#ff000000')
-            Blank()
-            Text('更多 >')
-              .fontSize(12)
-              .fontColor('#ff999999')
-          }
-          .width('100%')
-          
-          Column({ space: 8 }) {
-            Text('暂无自建歌单')
-              .fontSize(14)
-              .fontColor('#ff999999')
-              .padding({ top: 20, bottom: 20 })
-          }
-          .width('100%')
-          .justifyContent(FlexAlign.Center)
-        }
-        .width('100%')
-        .backgroundColor(Color.White)
-        .borderRadius(24)
-        .padding({ bottom: 12 })
       }
       .width('100%')
       .padding({ left: 16, right: 16, top: 12, bottom: 120 })
@@ -169,6 +209,67 @@ export struct MineView {
     .height('100%')
     .backgroundColor('#F4F4F4')
     .scrollBar(BarState.Off)
+
+    if (this.showCreateDialog) {
+      Column() {
+        Column() {
+          Text('新建歌单')
+            .fontSize(18)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#ff333333')
+            .margin({ bottom: 20 })
+          
+          TextField({ placeholder: '请输入歌单名称' })
+            .width('100%')
+            .height(48)
+            .backgroundColor('#fff5f5f5')
+            .borderRadius(12)
+            .padding({ left: 16, right: 16 })
+            .onChange((value: string) => {
+              this.newPlaylistName = value;
+            })
+          
+          Row({ space: 12 }) {
+            Button('取消')
+              .width(120)
+              .height(44)
+              .backgroundColor('#fff5f5f5')
+              .fontColor('#ff666666')
+              .borderRadius(22)
+              .onClick(() => {
+                this.showCreateDialog = false;
+                this.newPlaylistName = '';
+              })
+            
+            Button('创建')
+              .width(120)
+              .height(44)
+              .backgroundColor('#ffE3323D')
+              .fontColor(Color.White)
+              .borderRadius(22)
+              .onClick(() => {
+                this.createPlaylist();
+              })
+          }
+          .width('100%')
+          .justifyContent(FlexAlign.Center)
+          .margin({ top: 24 })
+        }
+        .width('80%')
+        .backgroundColor(Color.White)
+        .borderRadius(24)
+        .padding({ top: 24, bottom: 24, left: 20, right: 20 })
+        .shadow({ radius: 20, color: 'rgba(0,0,0,0.15)', offsetY: 10 })
+      }
+      .width('100%')
+      .height('100%')
+      .backgroundColor('rgba(0,0,0,0.5)')
+      .justifyContent(FlexAlign.Center)
+      .onClick(() => {
+        this.showCreateDialog = false;
+        this.newPlaylistName = '';
+      })
+    }
   }
 
   @Builder

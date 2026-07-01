@@ -69,6 +69,11 @@
       "name": "RecentPlayPage",
       "pageSourceFile": "src/main/ets/pages/RecentPlayPage.ets",
       "buildFunction": "RecentPlayPageBuilder"
+    },
+    {
+      "name": "CustomPlaylistPage",
+      "pageSourceFile": "src/main/ets/pages/CustomPlaylistPage.ets",
+      "buildFunction": "CustomPlaylistPageBuilder"
     }
   ]
 }

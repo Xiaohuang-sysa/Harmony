@@ -1,5 +1,6 @@
 import { preferences } from '@kit.ArkData';
 import { Song } from '../entity/Song';
+import { Playlist } from '../entity/Playlist';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 
 export class StorageHelper {
@@ -14,6 +15,8 @@ export class StorageHelper {
   static readonly KEY_LAST_SONG_INDEX = 'last_song_index';
   static readonly KEY_LAST_SONG_LIST = 'last_song_list';
   static readonly KEY_PLAY_POSITION = 'play_position';
+  static readonly KEY_CUSTOM_PLAYLISTS = 'custom_playlists';
+  static readonly KEY_PLAYLIST_SONGS_PREFIX = 'playlist_songs_';
 
   static async init(context: Context): Promise<void> {
     try {
@@ -199,6 +202,105 @@ export class StorageHelper {
       if (json) {
         const favorites = JSON.parse(json) as Song[];
         AppStorage.set<Song[]>('favorites', favorites);
+      }
+    } catch {}
+  }
+
+  // 自建歌单管理
+  static async getCustomPlaylists(): Promise<Playlist[]> {
+    return await StorageHelper.getObjectArray<Playlist>(StorageHelper.KEY_CUSTOM_PLAYLISTS);
+  }
+
+  static async createPlaylist(name: string): Promise<Playlist | null> {
+    try {
+      const playlists = await StorageHelper.getCustomPlaylists();
+      const newPlaylist: Playlist = {
+        id: Date.now(),
+        name: name,
+        coverImgUrl: '',
+        description: '',
+        trackCount: 0
+      };
+      playlists.push(newPlaylist);
+      await StorageHelper.putObjectArray(StorageHelper.KEY_CUSTOM_PLAYLISTS, playlists);
+      AppStorage.set<Playlist[]>('custom_playlists', playlists);
+      return newPlaylist;
+    } catch (err) {
+      hilog.error(0x0000, 'StorageHelper', `createPlaylist failed: ${JSON.stringify(err)}`);
+      return null;
+    }
+  }
+
+  static async deletePlaylist(playlistId: number): Promise<void> {
+    try {
+      let playlists = await StorageHelper.getCustomPlaylists();
+      playlists = playlists.filter(p => p.id !== playlistId);
+      await StorageHelper.putObjectArray(StorageHelper.KEY_CUSTOM_PLAYLISTS, playlists);
+      await StorageHelper.put(`${StorageHelper.KEY_PLAYLIST_SONGS_PREFIX}${playlistId}`, '[]');
+      AppStorage.set<Playlist[]>('custom_playlists', playlists);
+    } catch (err) {
+      hilog.error(0x0000, 'StorageHelper', `deletePlaylist failed: ${JSON.stringify(err)}`);
+    }
+  }
+
+  static async getPlaylistSongs(playlistId: number): Promise<Song[]> {
+    const key = `${StorageHelper.KEY_PLAYLIST_SONGS_PREFIX}${playlistId}`;
+    return await StorageHelper.getObjectArray<Song>(key);
+  }
+
+  static async addSongToPlaylist(playlistId: number, song: Song): Promise<void> {
+    try {
+      const key = `${StorageHelper.KEY_PLAYLIST_SONGS_PREFIX}${playlistId}`;
+      let songs = await StorageHelper.getPlaylistSongs(playlistId);
+      if (!songs.some(s => s.id === song.id)) {
+        songs.push({
+          id: song.id,
+          name: song.name,
+          ar: song.ar,
+          al: song.al,
+          dt: song.dt,
+          url: song.url
+        } as Song);
+        await StorageHelper.putObjectArray(key, songs);
+        const playlists = await StorageHelper.getCustomPlaylists();
+        const playlist = playlists.find(p => p.id === playlistId);
+        if (playlist) {
+          playlist.trackCount = songs.length;
+          await StorageHelper.putObjectArray(StorageHelper.KEY_CUSTOM_PLAYLISTS, playlists);
+          AppStorage.set<Playlist[]>('custom_playlists', playlists);
+        }
+        AppStorage.set<Song[]>(`playlist_songs_${playlistId}`, songs);
+      }
+    } catch (err) {
+      hilog.error(0x0000, 'StorageHelper', `addSongToPlaylist failed: ${JSON.stringify(err)}`);
+    }
+  }
+
+  static async removeSongFromPlaylist(playlistId: number, songId: number): Promise<void> {
+    try {
+      const key = `${StorageHelper.KEY_PLAYLIST_SONGS_PREFIX}${playlistId}`;
+      let songs = await StorageHelper.getPlaylistSongs(playlistId);
+      songs = songs.filter(s => s.id !== songId);
+      await StorageHelper.putObjectArray(key, songs);
+      const playlists = await StorageHelper.getCustomPlaylists();
+      const playlist = playlists.find(p => p.id === playlistId);
+      if (playlist) {
+        playlist.trackCount = songs.length;
+        await StorageHelper.putObjectArray(StorageHelper.KEY_CUSTOM_PLAYLISTS, playlists);
+        AppStorage.set<Playlist[]>('custom_playlists', playlists);
+      }
+      AppStorage.set<Song[]>(`playlist_songs_${playlistId}`, songs);
+    } catch (err) {
+      hilog.error(0x0000, 'StorageHelper', `removeSongFromPlaylist failed: ${JSON.stringify(err)}`);
+    }
+  }
+
+  static async loadCustomPlaylists(): Promise<void> {
+    try {
+      const json = await StorageHelper.get(StorageHelper.KEY_CUSTOM_PLAYLISTS);
+      if (json) {
+        const playlists = JSON.parse(json) as Playlist[];
+        AppStorage.set<Playlist[]>('custom_playlists', playlists);
       }
     } catch {}
   }

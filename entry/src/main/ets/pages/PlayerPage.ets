@@ -7,6 +7,7 @@ import { PlayMode } from '../constants/AppConstants';
 import { StorageHelper } from '../helper/StorageHelper';
 import { ArtistParams } from './ArtistPage';
 import { Artist } from '../entity/Artist';
+import { Playlist } from '../entity/Playlist';
 
 @Builder
 export function PlayerPageBuilder() {
@@ -26,7 +27,9 @@ export struct PlayerPage {
   @StorageProp('playback_speed') currentSpeed: number = 1.0;
   @StorageProp('current_mode') currentMode: number = PlayMode.SEQUENCE;
   @StorageProp('favorites') favorites: Song[] = [];
+  @StorageProp('custom_playlists') customPlaylists: Playlist[] = [];
   @State showSpeedMenu: boolean = false;
+  @State showPlaylistDialog: boolean = false;
   @State bgImgFailed: boolean = false;
   @State coverImgFailed: boolean = false;
   @State lyricLines: LyricLine[] = [];
@@ -184,6 +187,13 @@ export struct PlayerPage {
                 .fontColor(this.showLyrics ? Color.White : 'rgba(255,255,255,0.5)')
                 .onClick(() => {
                   this.showLyrics = !this.showLyrics;
+                })
+
+              SymbolGlyph($r('sys.symbol.add_circle'))
+                .fontSize(20)
+                .fontColor(['rgba(255,255,255,0.7)'])
+                .onClick(() => {
+                  this.showPlaylistDialog = true;
                 })
             }
           }
@@ -384,5 +394,94 @@ export struct PlayerPage {
       }
     }
     .hideTitleBar(true)
+
+    if (this.showPlaylistDialog) {
+      Column() {
+        Column() {
+          Text('添加到歌单')
+            .fontSize(18)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#ff333333')
+            .margin({ bottom: 20 })
+          
+          if (this.customPlaylists.length === 0) {
+            Text('暂无歌单，请先创建')
+              .fontSize(14)
+              .fontColor('#ff999999')
+          } else {
+            Column({ space: 12 }) {
+              ForEach(this.customPlaylists, (item: Playlist) => {
+                Row({ space: 12 }) {
+                  Stack({ alignContent: Alignment.Center }) {
+                    Image(item.coverImgUrl)
+                      .width(48)
+                      .height(48)
+                      .borderRadius(8)
+                      .backgroundColor('#ffeeeeee')
+                      .objectFit(ImageFit.Cover)
+                      .onError(() => {
+                      })
+                    if (!item.coverImgUrl) {
+                      SymbolGlyph($r('sys.symbol.music'))
+                        .fontSize(20)
+                        .fontColor(['#ff999999'])
+                    }
+                  }
+                  
+                  Column({ space: 4 }) {
+                    Text(item.name)
+                      .fontSize(15)
+                      .fontColor('#ff333333')
+                    Text(`${item.trackCount} 首`)
+                      .fontSize(12)
+                      .fontColor('#ff999999')
+                  }
+                  .alignItems(HorizontalAlign.Start)
+                  .layoutWeight(1)
+                  
+                  SymbolGlyph($r('sys.symbol.add'))
+                    .fontSize(20)
+                    .fontColor(['#E3323D'])
+                }
+                .width('100%')
+                .padding(12)
+                .backgroundColor('#fff5f5f5')
+                .borderRadius(12)
+                .onClick(() => {
+                  if (this.song) {
+                    StorageHelper.addSongToPlaylist(item.id, this.song);
+                    this.showPlaylistDialog = false;
+                  }
+                })
+              }, (item: Playlist) => item.id.toString())
+            }
+            .width('100%')
+          }
+          
+          Button('取消')
+            .width('100%')
+            .height(44)
+            .backgroundColor('#fff5f5f5')
+            .fontColor('#ff666666')
+            .borderRadius(22)
+            .margin({ top: 20 })
+            .onClick(() => {
+              this.showPlaylistDialog = false;
+            })
+        }
+        .width('80%')
+        .backgroundColor(Color.White)
+        .borderRadius(24)
+        .padding({ top: 24, bottom: 24, left: 20, right: 20 })
+        .shadow({ radius: 20, color: 'rgba(0,0,0,0.15)', offsetY: 10 })
+      }
+      .width('100%')
+      .height('100%')
+      .backgroundColor('rgba(0,0,0,0.5)')
+      .justifyContent(FlexAlign.Center)
+      .onClick(() => {
+        this.showPlaylistDialog = false;
+      })
+    }
   }
 }
