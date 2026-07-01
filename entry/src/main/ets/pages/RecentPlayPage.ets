@@ -1,6 +1,11 @@
 import { AvPlayerHelper } from '../helper/AvPlayerHelper';
 import { Song } from '../entity/Song';
 
+@Builder
+export function RecentPlayPageBuilder() {
+  RecentPlayPage()
+}
+
 @Entry
 @Component
 struct RecentPlayPage {
@@ -84,6 +89,5 @@ struct RecentPlayPage {
       .backgroundColor('#F4F4F4')
     }
     .title('最近播放')
-    .navigationBarColor('#FFFFFF')
   }
 }
