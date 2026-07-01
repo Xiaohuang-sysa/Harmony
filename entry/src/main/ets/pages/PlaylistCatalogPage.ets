@@ -1,5 +1,6 @@
 import { HttpHelper } from '../helper/HttpHelper';
 import { Playlist } from '../entity/Playlist';
+import { PlaylistDetailParams } from './PlaylistDetailPage';
 
 @Builder
 export function PlaylistCatalogPageBuilder() {
@@ -118,7 +119,11 @@ export struct PlaylistCatalogPage {
                 .backgroundColor('rgba(255,255,255,0.05)')
                 .borderRadius(16)
                 .onClick(() => {
-                  this.pathStack.pushPathByName('PlaylistDetailPage', { id: item.id, title: item.name, coverImgUrl: item.coverImgUrl, description: item.description });
+                  PlaylistDetailParams.id = item.id;
+                  PlaylistDetailParams.title = item.name;
+                  PlaylistDetailParams.coverImgUrl = item.coverImgUrl;
+                  PlaylistDetailParams.description = item.description;
+                  this.pathStack.pushPath({ name: 'PlaylistDetailPage' });
                 })
               }, (item: Playlist) => item.id.toString())
             }

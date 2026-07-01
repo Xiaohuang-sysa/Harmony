@@ -9,6 +9,13 @@ export class PlaylistDetailParams {
   static description: string = '';
 }
 
+interface PlaylistNavParam {
+  id: number;
+  title: string;
+  coverImgUrl: string;
+  description: string;
+}
+
 @Builder
 export function PlaylistDetailPageBuilder() {
   PlaylistDetailPage()
@@ -33,19 +40,10 @@ export struct PlaylistDetailPage {
   }
 
   async aboutToAppear() {
-    const params = this.pathStack.getParam() as { id?: number; title?: string; coverImgUrl?: string; description?: string };
-    
     let playlistId = PlaylistDetailParams.id;
     this.playlistName = PlaylistDetailParams.title;
     this.coverUrl = PlaylistDetailParams.coverImgUrl;
     this.desc = PlaylistDetailParams.description;
-
-    if (params && params.id) {
-      playlistId = params.id;
-      if (params.title) this.playlistName = params.title;
-      if (params.coverImgUrl) this.coverUrl = params.coverImgUrl;
-      if (params.description) this.desc = params.description;
-    }
 
     if (playlistId > 0) {
       await this.loadSongs(playlistId);

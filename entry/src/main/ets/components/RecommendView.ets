@@ -4,6 +4,7 @@ import { AppConstants } from '../constants/AppConstants';
 import { BannerItem } from '../entity/BannerItem';
 import { Playlist } from '../entity/Playlist';
 import { Song } from '../entity/Song';
+import { PlaylistDetailParams } from '../pages/PlaylistDetailPage';
 
 @Builder
 function QuickAccessItem(icon: Resource, title: string, color: string, onClick: () => void) {
@@ -126,7 +127,7 @@ export struct RecommendView {
           QuickAccessItem($r('sys.symbol.folder'), '歌单', '#007DFF', () => {
             this.pathStack.pushPath({ name: 'PlaylistCatalogPage' });
           })
-          QuickAccessItem($r('sys.symbol.bar_chart_3'), '排行榜', '#FF9500', () => {
+          QuickAccessItem($r('sys.symbol.trending_up'), '排行榜', '#FF9500', () => {
             this.pathStack.pushPath({ name: 'ChartsPage' });
           })
         }
@@ -169,7 +170,11 @@ export struct RecommendView {
                 }
                 .width(104)
                 .onClick(() => {
-                  this.pathStack.pushPathByName('PlaylistDetailPage', { id: item.id, title: item.name, coverImgUrl: item.coverImgUrl, description: item.description });
+                  PlaylistDetailParams.id = item.id;
+                  PlaylistDetailParams.title = item.name;
+                  PlaylistDetailParams.coverImgUrl = item.coverImgUrl;
+                  PlaylistDetailParams.description = item.description;
+                  this.pathStack.pushPath({ name: 'PlaylistDetailPage' });
                 })
               }, (item: Playlist) => item.id.toString())
             }
