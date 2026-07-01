@@ -21,6 +21,10 @@ export struct MyFavoritePage {
     this.coverFailedSet.add(songId);
   }
 
+  async aboutToAppear() {
+    await StorageHelper.loadFavorites();
+  }
+
   removeFavorite(song: Song): void {
     StorageHelper.toggleFavorite(song);
   }

@@ -169,6 +169,8 @@ export struct RecommendView {
                     .textAlign(TextAlign.Start)
                 }
                 .width(104)
+                .height(140)
+                .justifyContent(FlexAlign.Start)
                 .onClick(() => {
                   PlaylistDetailParams.id = item.id;
                   PlaylistDetailParams.title = item.name;
