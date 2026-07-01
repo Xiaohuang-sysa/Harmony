@@ -1,0 +1,30 @@
+{
+  "network-security-config": {
+    "domain-config": [
+      {
+        "domains": [
+          {
+            "include-subdomains": true,
+            "name": "10.0.2.2"
+          },
+          {
+            "include-subdomains": true,
+            "name": "localhost"
+          },
+          {
+            "include-subdomains": true,
+            "name": "music.163.com"
+          }
+        ],
+        "trust-anchors": [
+          {
+            "certificates": "system"
+          }
+        ]
+      }
+    ],
+    "base-config": {
+      "cleartextTrafficPermitted": true
+    }
+  }
+}

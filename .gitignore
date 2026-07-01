@@ -1,0 +1,23 @@
+/node_modules
+/oh_modules
+/local.properties
+/.idea
+**/build
+/.hvigor
+.cxx
+/.clangd
+/.clang-format
+/.clang-tidy
+**/.test
+/.appanalyzer
+
+# AI related files
+**/*.ai
+**/ai/
+**/AI/
+**/AI*
+1.pdf
+1_pdf_content.txt
+
+# Netease Cloud Music API
+/NeteaseCloudMusicApi/

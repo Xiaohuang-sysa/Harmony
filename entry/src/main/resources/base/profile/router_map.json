@@ -1,0 +1,59 @@
+{
+  "routerMap": [
+    {
+      "name": "ChartsPage",
+      "pageSourceFile": "src/main/ets/pages/ChartsPage.ets",
+      "buildFunction": "ChartsPageBuilder"
+    },
+    {
+      "name": "PlaylistDetailPage",
+      "pageSourceFile": "src/main/ets/pages/PlaylistDetailPage.ets",
+      "buildFunction": "PlaylistDetailPageBuilder"
+    },
+    {
+      "name": "PlayerPage",
+      "pageSourceFile": "src/main/ets/pages/PlayerPage.ets",
+      "buildFunction": "PlayerPageBuilder"
+    },
+    {
+      "name": "SearchPage",
+      "pageSourceFile": "src/main/ets/pages/SearchPage.ets",
+      "buildFunction": "SearchPageBuilder"
+    },
+    {
+      "name": "SearchDetailPage",
+      "pageSourceFile": "src/main/ets/pages/SearchDetailPage.ets",
+      "buildFunction": "SearchDetailPageBuilder"
+    },
+    {
+      "name": "MyFavoritePage",
+      "pageSourceFile": "src/main/ets/pages/MyFavoritePage.ets",
+      "buildFunction": "MyFavoritePageBuilder"
+    },
+    {
+      "name": "CloudSyncPage",
+      "pageSourceFile": "src/main/ets/pages/CloudSyncPage.ets",
+      "buildFunction": "CloudSyncPageBuilder"
+    },
+    {
+      "name": "LocalMusicPage",
+      "pageSourceFile": "src/main/ets/pages/LocalMusicPage.ets",
+      "buildFunction": "LocalMusicPageBuilder"
+    },
+    {
+      "name": "PlaylistPage",
+      "pageSourceFile": "src/main/ets/pages/PlaylistPage.ets",
+      "buildFunction": "PlaylistPageBuilder"
+    },
+    {
+      "name": "ArtistPage",
+      "pageSourceFile": "src/main/ets/pages/ArtistPage.ets",
+      "buildFunction": "ArtistPageBuilder"
+    },
+    {
+      "name": "AlbumDetailPage",
+      "pageSourceFile": "src/main/ets/pages/AlbumDetailPage.ets",
+      "buildFunction": "AlbumDetailPageBuilder"
+    }
+  ]
+}
