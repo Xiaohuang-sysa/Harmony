@@ -5,6 +5,7 @@ import { AppConstants } from '../constants/AppConstants';
 import { UserInfo } from '../entity/UserInfo';
 import { Playlist } from '../entity/Playlist';
 
+
 @Component
 export struct MineView {
   @Consume('pathStack') pathStack: NavPathStack;
@@ -47,8 +48,9 @@ export struct MineView {
   }
 
   build() {
-    Scroll() {
-      Column() {
+    Stack() {
+      Scroll() {
+        Column() {
         Row() {
           Image(this.userInfo.avatarUrl)
             .width(64)
@@ -104,9 +106,9 @@ export struct MineView {
               .fontColor('#ff000000')
             Blank()
             Row({ space: 4 }) {
-              SymbolGlyph($r('sys.symbol.add'))
-                .fontSize(16)
-                .fontColor(['#E3323D'])
+              SymbolGlyph($r('sys.symbol.plus'))
+              .fontSize(16)
+              .fontColor(['#E3323D'])
               Text('新建')
                 .fontSize(12)
                 .fontColor('#E3323D')
@@ -206,69 +208,70 @@ export struct MineView {
       .padding({ left: 16, right: 16, top: 12, bottom: 120 })
     }
     .width('100%')
-    .height('100%')
-    .backgroundColor('#F4F4F4')
-    .scrollBar(BarState.Off)
+        .height('100%')
+        .backgroundColor('#F4F4F4')
+        .scrollBar(BarState.Off)
 
-    if (this.showCreateDialog) {
-      Column() {
+      if (this.showCreateDialog) {
         Column() {
-          Text('新建歌单')
-            .fontSize(18)
-            .fontWeight(FontWeight.Bold)
-            .fontColor('#ff333333')
-            .margin({ bottom: 20 })
-          
-          TextField({ placeholder: '请输入歌单名称' })
-            .width('100%')
-            .height(48)
-            .backgroundColor('#fff5f5f5')
-            .borderRadius(12)
-            .padding({ left: 16, right: 16 })
-            .onChange((value: string) => {
-              this.newPlaylistName = value;
-            })
-          
-          Row({ space: 12 }) {
-            Button('取消')
-              .width(120)
-              .height(44)
+          Column() {
+            Text('新建歌单')
+              .fontSize(18)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#ff333333')
+              .margin({ bottom: 20 })
+            
+            TextInput({ placeholder: '请输入歌单名称' })
+              .width('100%')
+              .height(48)
               .backgroundColor('#fff5f5f5')
-              .fontColor('#ff666666')
-              .borderRadius(22)
-              .onClick(() => {
-                this.showCreateDialog = false;
-                this.newPlaylistName = '';
+              .borderRadius(12)
+              .padding({ left: 16, right: 16 })
+              .onChange((value: string) => {
+                this.newPlaylistName = value;
               })
             
-            Button('创建')
-              .width(120)
-              .height(44)
-              .backgroundColor('#ffE3323D')
-              .fontColor(Color.White)
-              .borderRadius(22)
-              .onClick(() => {
-                this.createPlaylist();
-              })
+            Row({ space: 12 }) {
+              Button('取消')
+                .width(120)
+                .height(44)
+                .backgroundColor('#fff5f5f5')
+                .fontColor('#ff666666')
+                .borderRadius(22)
+                .onClick(() => {
+                  this.showCreateDialog = false;
+                  this.newPlaylistName = '';
+                })
+              
+              Button('创建')
+                .width(120)
+                .height(44)
+                .backgroundColor('#ffE3323D')
+                .fontColor(Color.White)
+                .borderRadius(22)
+                .onClick(() => {
+                  this.createPlaylist();
+                })
+            }
+            .width('100%')
+            .justifyContent(FlexAlign.Center)
+            .margin({ top: 24 })
           }
-          .width('100%')
-          .justifyContent(FlexAlign.Center)
-          .margin({ top: 24 })
+          .width('80%')
+          .backgroundColor(Color.White)
+          .borderRadius(24)
+          .padding({ top: 24, bottom: 24, left: 20, right: 20 })
+          .shadow({ radius: 20, color: 'rgba(0,0,0,0.15)', offsetY: 10 })
         }
-        .width('80%')
-        .backgroundColor(Color.White)
-        .borderRadius(24)
-        .padding({ top: 24, bottom: 24, left: 20, right: 20 })
-        .shadow({ radius: 20, color: 'rgba(0,0,0,0.15)', offsetY: 10 })
+        .width('100%')
+        .height('100%')
+        .backgroundColor('rgba(0,0,0,0.5)')
+        .justifyContent(FlexAlign.Center)
+        .onClick(() => {
+          this.showCreateDialog = false;
+          this.newPlaylistName = '';
+        })
       }
-      .width('100%')
-      .height('100%')
-      .backgroundColor('rgba(0,0,0,0.5)')
-      .justifyContent(FlexAlign.Center)
-      .onClick(() => {
-        this.showCreateDialog = false;
-        this.newPlaylistName = '';
-      })
     }
   }
 
