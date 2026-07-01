@@ -127,7 +127,7 @@ export struct RecommendView {
           QuickAccessItem($r('sys.symbol.folder'), '歌单', '#007DFF', () => {
             this.pathStack.pushPath({ name: 'PlaylistCatalogPage' });
           })
-          QuickAccessItem($r('sys.symbol.trending_up'), '排行榜', '#FF9500', () => {
+          QuickAccessItem($r('sys.symbol.star'), '排行榜', '#FF9500', () => {
             this.pathStack.pushPath({ name: 'ChartsPage' });
           })
         }
