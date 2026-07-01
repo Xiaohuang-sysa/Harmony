@@ -331,7 +331,28 @@ export class HttpHelper {
       const res = await HttpHelper.get(url);
       const json = JSON.parse(res) as SongResponse;
       if (json && json.result && json.result.songs) {
-        return json.result.songs;
+        const result: Song[] = [];
+        for (const s of json.result.songs) {
+          const song = new Song();
+          song.id = s.id;
+          song.name = s.name;
+          song.dt = s.dt;
+          song.fee = s.fee;
+          if (s.ar && s.ar.length > 0) {
+            song.ar = s.ar;
+          } else if ((s as Record<string, Object>)['artists'] && Array.isArray((s as Record<string, Object>)['artists'])) {
+            const artists = (s as Record<string, Object>)['artists'] as Artist[];
+            song.ar = artists;
+          }
+          if (s.al && s.al.name) {
+            song.al = s.al;
+          } else if ((s as Record<string, Object>)['album']) {
+            const album = (s as Record<string, Object>)['album'] as Album;
+            song.al = album;
+          }
+          result.push(song);
+        }
+        return result;
       }
       return [];
     } catch (err) {
