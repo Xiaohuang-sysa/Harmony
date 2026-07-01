@@ -2,14 +2,12 @@ import { HttpHelper } from '../helper/HttpHelper';
 import { AvPlayerHelper } from '../helper/AvPlayerHelper';
 import { AppConstants } from '../constants/AppConstants';
 import { UserInfo } from '../entity/UserInfo';
-import { Song } from '../entity/Song';
 import { ArtistParams } from '../pages/ArtistPage';
 import { AlbumParams } from '../pages/AlbumDetailPage';
 
 @Component
 export struct MineView {
   @Consume('pathStack') pathStack: NavPathStack;
-  @StorageProp('play_history') playHistory: Song[] = [];
 
   @State userInfo: UserInfo = new UserInfo();
 
@@ -139,7 +137,7 @@ export struct MineView {
 
         Column() {
           Row() {
-            Text('最近播放')
+            Text('自建歌单')
               .fontSize(18)
               .fontWeight(FontWeight.Bold)
               .fontColor('#ff000000')
@@ -150,63 +148,14 @@ export struct MineView {
           }
           .width('100%')
           
-          if (this.playHistory.length === 0) {
-            Column({ space: 8 }) {
-              SymbolGlyph($r('sys.symbol.music'))
-                .fontSize(32)
-                .fontColor(['#ffcccccc'])
-              Text('暂无播放记录')
-                .fontSize(14)
-                .fontColor('#ff999999')
-            }
-            .width('100%')
-            .padding({ top: 20, bottom: 20 })
-            .justifyContent(FlexAlign.Center)
-          } else {
-            Column({ space: 10 }) {
-              ForEach(this.playHistory, (item: Song) => {
-                Row({ space: 12 }) {
-                  Image(item.al?.picUrl)
-                    .width(52)
-                    .height(52)
-                    .backgroundColor('#ffeeeeee')
-                    .borderRadius(12)
-                    .objectFit(ImageFit.Cover)
-                    .onError(() => {
-                    })
-                  
-                  Column({ space: 6 }) {
-                    Text(item.name)
-                      .fontSize(15)
-                      .fontWeight(FontWeight.Medium)
-                      .fontColor('#ff333333')
-                      .maxLines(1)
-                      .textOverflow({ overflow: TextOverflow.Ellipsis })
-                    Text(item.ar && item.ar.length > 0 ? item.ar.map(a => a.name).join(' / ') : '未知歌手')
-                      .fontSize(12)
-                      .fontColor('#ff999999')
-                      .maxLines(1)
-                      .textOverflow({ overflow: TextOverflow.Ellipsis })
-                  }
-                  .alignItems(HorizontalAlign.Start)
-                  .layoutWeight(1)
-                  
-                  SymbolGlyph($r('sys.symbol.more'))
-                    .fontSize(20)
-                    .fontColor(['#ff999999'])
-                }
-                .width('100%')
-                .padding(12)
-                .backgroundColor('#fff9f9f9')
-                .borderRadius(16)
-                .onClick(() => {
-                  AvPlayerHelper.playMusic(item);
-                  this.pathStack.pushPath({ name: 'PlayerPage' });
-                })
-              }, (item: Song) => item.id.toString())
-            }
-            .width('100%')
+          Column({ space: 8 }) {
+            Text('暂无自建歌单')
+              .fontSize(14)
+              .fontColor('#ff999999')
+              .padding({ top: 20, bottom: 20 })
           }
+          .width('100%')
+          .justifyContent(FlexAlign.Center)
         }
         .width('100%')
         .backgroundColor(Color.White)
