@@ -54,6 +54,16 @@
       "name": "AlbumDetailPage",
       "pageSourceFile": "src/main/ets/pages/AlbumDetailPage.ets",
       "buildFunction": "AlbumDetailPageBuilder"
+    },
+    {
+      "name": "DailyRecommendPage",
+      "pageSourceFile": "src/main/ets/pages/DailyRecommendPage.ets",
+      "buildFunction": "DailyRecommendPageBuilder"
+    },
+    {
+      "name": "PlaylistCatalogPage",
+      "pageSourceFile": "src/main/ets/pages/PlaylistCatalogPage.ets",
+      "buildFunction": "PlaylistCatalogPageBuilder"
     }
   ]
 }

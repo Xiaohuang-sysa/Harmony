@@ -5,19 +5,38 @@ import { BannerItem } from '../entity/BannerItem';
 import { Playlist } from '../entity/Playlist';
 import { Song } from '../entity/Song';
 
+@Builder
+function QuickAccessItem(icon: Resource, title: string, color: string, onClick: () => void) {
+  Column({ space: 8 }) {
+    Row() {
+      SymbolGlyph(icon)
+        .fontSize(24)
+        .fontColor([color])
+    }
+    .width(48)
+    .height(48)
+    .backgroundColor('#ffe6e6e6')
+    .borderRadius(24)
+    .justifyContent(FlexAlign.Center)
+    
+    Text(title)
+      .fontSize(12)
+      .fontColor('#ff666666')
+  }
+  .width('33.33%')
+  .onClick(onClick)
+}
+
 @Component
 export struct RecommendView {
   @Consume('pathStack') pathStack: NavPathStack;
+  @StorageProp('play_history') playHistory: Song[] = [];
 
   @State bannerList: BannerItem[] = [];
   @State playlistData: Playlist[] = [];
-  @State recentData: Song[] = [];
-  private dailyRecList: string[] = ['每日推荐', '私人漫游', '歌单', '排行榜', '电台'];
 
   async aboutToAppear() {
-    // 优先从 AppStorage 缓存恢复数据（避免 Tab 切换时数据丢失）
     this.loadFromCache();
-    // 只在首次加载或缓存过期时拉取新数据
     if (this.bannerList.length === 0) {
       await this.refreshData();
     }
@@ -26,12 +45,10 @@ export struct RecommendView {
   async refreshData(): Promise<void> {
     const results = await Promise.all([
       HttpHelper.fetchBanners(),
-      HttpHelper.fetchPersonalizedPlaylists(),
-      HttpHelper.fetchDailyRoam()
+      HttpHelper.fetchPersonalizedPlaylists()
     ]);
     const banners = results[0] as BannerItem[];
     const playlists = results[1] as Playlist[];
-    const songs = results[2] as Song[];
     if (banners.length > 0) {
       this.bannerList = banners;
       AppStorage.set<string>(AppConstants.CACHE_BANNERS, JSON.stringify(banners));
@@ -39,10 +56,6 @@ export struct RecommendView {
     if (playlists.length > 0) {
       this.playlistData = playlists;
       AppStorage.set<string>(AppConstants.CACHE_PLAYLISTS, JSON.stringify(playlists));
-    }
-    if (songs.length > 0) {
-      this.recentData = songs;
-      AppStorage.set<string>(AppConstants.CACHE_RECENT_SONGS, JSON.stringify(songs));
     }
     AppStorage.set<number>(AppConstants.CACHE_FETCH_TIME, Date.now());
   }
@@ -56,16 +69,11 @@ export struct RecommendView {
     if (playlistsStr) {
       try { this.playlistData = JSON.parse(playlistsStr); } catch (e) {}
     }
-    const songsStr = AppStorage.get<string>(AppConstants.CACHE_RECENT_SONGS);
-    if (songsStr) {
-      try { this.recentData = JSON.parse(songsStr); } catch (e) {}
-    }
   }
 
   build() {
     Scroll() {
       Column({ space: 20 }) {
-        // 数据为空时显示刷新入口
         if (this.bannerList.length === 0 && this.playlistData.length === 0) {
           Row() {
             SymbolGlyph($r('sys.symbol.arrow_clockwise'))
@@ -87,7 +95,6 @@ export struct RecommendView {
           })
         }
 
-        // 1. Banner Carousel
         Swiper() {
           ForEach(this.bannerList, (item: BannerItem) => {
             Row() {
@@ -97,7 +104,6 @@ export struct RecommendView {
                 .objectFit(ImageFit.Cover)
                 .backgroundColor('#ffcccccc')
                 .onError((err) => {
-                  // Image load failed silently, backgroundColor shows through
                 })
             }
             .width('100%')
@@ -112,36 +118,21 @@ export struct RecommendView {
         .autoPlay(true)
         .itemSpace(10)
         .indicator(true)
-        
-        // 2. Quick Access Menu
+
         Row() {
-          ForEach(this.dailyRecList, (title: string) => {
-            Column({ space: 8 }) {
-              Row() {
-                SymbolGlyph($r('sys.symbol.music'))
-                  .fontSize(24)
-                  .fontColor(['#ff333333'])
-              }
-              .width(48)
-              .height(48)
-              .backgroundColor('#ffe6e6e6')
-              .borderRadius(24)
-              .justifyContent(FlexAlign.Center)
-              
-              Text(title)
-                .fontSize(12)
-                .fontColor('#ff666666')
-            }
-            .width('20%')
-            .onClick(() => {
-              // Click action
-            })
-          }, (item: string) => item)
+          QuickAccessItem($r('sys.symbol.music'), '每日推荐', '#E3323D', () => {
+            this.pathStack.pushPath({ name: 'DailyRecommendPage' });
+          })
+          QuickAccessItem($r('sys.symbol.folder'), '歌单', '#007DFF', () => {
+            this.pathStack.pushPath({ name: 'PlaylistCatalogPage' });
+          })
+          QuickAccessItem($r('sys.symbol.bar_chart_3'), '排行榜', '#FF9500', () => {
+            this.pathStack.pushPath({ name: 'ChartsPage' });
+          })
         }
         .width('100%')
-        .justifyContent(FlexAlign.SpaceBetween)
+        .justifyContent(FlexAlign.SpaceAround)
 
-        // 3. Personalized Playlists (猜你喜欢)
         Column({ space: 12 }) {
           Row() {
             Text('猜你喜欢')
@@ -166,7 +157,6 @@ export struct RecommendView {
                     .backgroundColor('#ffeeeeee')
                     .objectFit(ImageFit.Cover)
                     .onError(() => {
-                      // fallback to backgroundColor
                     })
                   
                   Text(item.name)
@@ -179,7 +169,7 @@ export struct RecommendView {
                 }
                 .width(104)
                 .onClick(() => {
-                  // Example: this.pathStack.pushPath({ name: 'PlaylistDetailPage' })
+                  this.pathStack.pushPathByName('PlaylistDetailPage', { id: item.id, title: item.name, coverImgUrl: item.coverImgUrl, description: item.description });
                 })
               }, (item: Playlist) => item.id.toString())
             }
@@ -190,7 +180,6 @@ export struct RecommendView {
         }
         .width('100%')
         
-        // 4. Recently Played (最近播放)
         Column({ space: 12 }) {
           Row() {
             Text('最近播放')
@@ -204,53 +193,66 @@ export struct RecommendView {
           }
           .width('100%')
           
-          Column({ space: 10 }) {
-            ForEach(this.recentData, (item: Song) => {
-              Row({ space: 12 }) {
-                Image(item.al?.picUrl)
-                  .width(52)
-                  .height(52)
-                  .backgroundColor('#ffeeeeee')
-                  .borderRadius(12)
-                  .objectFit(ImageFit.Cover)
-                  .onError(() => {
-                    // fallback to backgroundColor
-                  })
-                
-                Column({ space: 6 }) {
-                  Text(item.name)
-                    .fontSize(15)
-                    .fontWeight(FontWeight.Medium)
-                    .fontColor('#ff333333')
-                    .maxLines(1)
-                    .textOverflow({ overflow: TextOverflow.Ellipsis })
-                  Text(item.ar && item.ar.length > 0 ? item.ar.map(a => a.name).join(' / ') : '未知歌手')
-                    .fontSize(12)
-                    .fontColor('#ff999999')
-                    .maxLines(1)
-                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+          if (this.playHistory.length === 0) {
+            Column({ space: 8 }) {
+              SymbolGlyph($r('sys.symbol.music'))
+                .fontSize(32)
+                .fontColor(['#ffcccccc'])
+              Text('暂无播放记录')
+                .fontSize(14)
+                .fontColor('#ff999999')
+            }
+            .width('100%')
+            .padding({ top: 20, bottom: 20 })
+            .justifyContent(FlexAlign.Center)
+          } else {
+            Column({ space: 10 }) {
+              ForEach(this.playHistory.slice(0, 10), (item: Song) => {
+                Row({ space: 12 }) {
+                  Image(item.al?.picUrl)
+                    .width(52)
+                    .height(52)
+                    .backgroundColor('#ffeeeeee')
+                    .borderRadius(12)
+                    .objectFit(ImageFit.Cover)
+                    .onError(() => {
+                    })
+                  
+                  Column({ space: 6 }) {
+                    Text(item.name)
+                      .fontSize(15)
+                      .fontWeight(FontWeight.Medium)
+                      .fontColor('#ff333333')
+                      .maxLines(1)
+                      .textOverflow({ overflow: TextOverflow.Ellipsis })
+                    Text(item.ar && item.ar.length > 0 ? item.ar.map(a => a.name).join(' / ') : '未知歌手')
+                      .fontSize(12)
+                      .fontColor('#ff999999')
+                      .maxLines(1)
+                      .textOverflow({ overflow: TextOverflow.Ellipsis })
+                  }
+                  .alignItems(HorizontalAlign.Start)
+                  .layoutWeight(1)
+                  
+                  SymbolGlyph($r('sys.symbol.more'))
+                    .fontSize(20)
+                    .fontColor(['#ff999999'])
                 }
-                .alignItems(HorizontalAlign.Start)
-                .layoutWeight(1)
-                
-                SymbolGlyph($r('sys.symbol.more'))
-                  .fontSize(20)
-                  .fontColor(['#ff999999'])
-              }
-              .width('100%')
-              .padding(12)
-              .backgroundColor('#fff9f9f9')
-              .borderRadius(16)
-              .onClick(() => {
-                AvPlayerHelper.playMusic(item);
-                this.pathStack.pushPath({ name: 'PlayerPage' });
-              })
-            }, (item: Song) => item.id.toString())
+                .width('100%')
+                .padding(12)
+                .backgroundColor('#fff9f9f9')
+                .borderRadius(16)
+                .onClick(() => {
+                  AvPlayerHelper.playMusic(item);
+                  this.pathStack.pushPath({ name: 'PlayerPage' });
+                })
+              }, (item: Song) => item.id.toString())
+            }
+            .width('100%')
           }
-          .width('100%')
         }
         .width('100%')
-        .padding({ bottom: 40 }) // Safe area for mini player/bottom tabs
+        .padding({ bottom: 40 })
         
       }
       .width('100%')

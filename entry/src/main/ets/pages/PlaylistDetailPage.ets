@@ -33,10 +33,20 @@ export struct PlaylistDetailPage {
   }
 
   async aboutToAppear() {
+    const params = this.pathStack.getParam() as { id?: number; title?: string; coverImgUrl?: string; description?: string };
+    
+    let playlistId = PlaylistDetailParams.id;
     this.playlistName = PlaylistDetailParams.title;
     this.coverUrl = PlaylistDetailParams.coverImgUrl;
     this.desc = PlaylistDetailParams.description;
-    const playlistId = PlaylistDetailParams.id;
+
+    if (params && params.id) {
+      playlistId = params.id;
+      if (params.title) this.playlistName = params.title;
+      if (params.coverImgUrl) this.coverUrl = params.coverImgUrl;
+      if (params.description) this.desc = params.description;
+    }
+
     if (playlistId > 0) {
       await this.loadSongs(playlistId);
     }
@@ -67,7 +77,6 @@ export struct PlaylistDetailPage {
           .height('100%')
           .justifyContent(FlexAlign.Center)
         } else {
-          // Hero header
           Column() {
             Image(this.coverUrl)
               .width('100%')
@@ -75,7 +84,6 @@ export struct PlaylistDetailPage {
               .objectFit(ImageFit.Cover)
               .backgroundColor('rgba(255,255,255,0.1)')
               .onError(() => {
-                // fallback
               })
 
             Column() {
@@ -110,7 +118,6 @@ export struct PlaylistDetailPage {
           }
           .width('100%')
 
-          // Song list
           if (this.songs.length === 0) {
             Column({ space: 12 }) {
               SymbolGlyph($r('sys.symbol.music'))
@@ -150,14 +157,12 @@ export struct PlaylistDetailPage {
 
   @Builder songRow(song: Song, index: number) {
     Row({ space: 10 }) {
-      // Track number
       Text(String(index + 1))
         .fontSize(13)
         .fontColor('rgba(255,255,255,0.4)')
         .width(24)
         .textAlign(TextAlign.Center)
 
-      // Album art
       if (song.al && song.al.picUrl && !this.isCoverFailed(song.id)) {
         Image(song.al.picUrl)
           .width(40)
@@ -183,7 +188,6 @@ export struct PlaylistDetailPage {
         }
       }
 
-      // Song info
       Column({ space: 2 }) {
         Text(song.name)
           .fontSize(14)

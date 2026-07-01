@@ -3,8 +3,6 @@ import { StorageHelper } from '../helper/StorageHelper';
 import { PlaylistHelper } from '../helper/PlaylistHelper';
 import { FoundView } from '../components/FoundView';
 import { RecommendView } from '../components/RecommendView';
-import { RoamView } from '../components/RoamView';
-import { NoteView } from '../components/NoteView';
 import { MineView } from '../components/MineView';
 import { MiniPlayer } from '../components/MiniPlayer';
 
@@ -58,19 +56,9 @@ struct Index {
             .tabBar(this.tabBuilder(1, '发现', $r('sys.symbol.magnifyingglass')))
 
             TabContent() {
-              RoamView()
-            }
-            .tabBar(this.tabBuilder(2, '漫游', $r('sys.symbol.compass')))
-
-            TabContent() {
-              NoteView()
-            }
-            .tabBar(this.tabBuilder(3, '笔记', $r('sys.symbol.doc_plaintext')))
-
-            TabContent() {
               MineView()
             }
-            .tabBar(this.tabBuilder(4, '我的', $r('sys.symbol.person')))
+            .tabBar(this.tabBuilder(2, '我的', $r('sys.symbol.person')))
           }
           .barHeight(56)
           .onChange((index: number) => {

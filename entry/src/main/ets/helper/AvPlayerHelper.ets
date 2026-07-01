@@ -3,6 +3,7 @@ import { Song } from '../entity/Song';
 import { PlayMode } from '../constants/AppConstants';
 import { HttpHelper } from './HttpHelper';
 import { PlaylistHelper } from './PlaylistHelper';
+import { StorageHelper } from './StorageHelper';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 
 export class AvPlayerHelper {
@@ -114,6 +115,9 @@ export class AvPlayerHelper {
 
     // 更新详情
     AvPlayerHelper.httpSongDetail(song);
+
+    // 记录播放历史
+    StorageHelper.addPlayHistory(song);
 
     // 获取播放URL
     const url = await HttpHelper.getSongUrl(song.id);
