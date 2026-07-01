@@ -133,6 +133,27 @@ interface MvUrlResponse {
   data: MvUrlData;
 }
 
+interface SearchSongItem {
+  id: number;
+  name: string;
+  ar?: Artist[];
+  al?: Album;
+  artists?: Artist[];
+  album?: Album;
+  dt: number;
+  fee: number;
+}
+
+interface SearchResult {
+  songs: SearchSongItem[];
+  songCount: number;
+}
+
+interface SearchResponse {
+  result?: SearchResult;
+  code: number;
+}
+
 export class HttpHelper {
   /**
    * 封装通用网络请求
@@ -331,7 +352,7 @@ export class HttpHelper {
     try {
       const url = `${AppConstants.API_BASE_URL}/search?keywords=${encodeURIComponent(keyword)}`;
       const res = await HttpHelper.get(url);
-      const json = JSON.parse(res) as SongResponse;
+      const json = JSON.parse(res) as SearchResponse;
       if (json && json.result && json.result.songs) {
         const result: Song[] = [];
         for (const s of json.result.songs) {
@@ -340,16 +361,15 @@ export class HttpHelper {
           song.name = s.name;
           song.dt = s.dt;
           song.fee = s.fee;
-          const raw = s as unknown as Record<string, any>;
           if (s.ar && s.ar.length > 0) {
             song.ar = s.ar;
-          } else if (raw['artists'] && Array.isArray(raw['artists'])) {
-            song.ar = raw['artists'] as Artist[];
+          } else if (s.artists && s.artists.length > 0) {
+            song.ar = s.artists;
           }
           if (s.al && s.al.name) {
             song.al = s.al;
-          } else if (raw['album']) {
-            song.al = raw['album'] as Album;
+          } else if (s.album) {
+            song.al = s.album;
           }
           result.push(song);
         }
