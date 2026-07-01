@@ -98,6 +98,19 @@ export struct MineView {
         .padding({ left: 20, right: 20, bottom: 24 })
         .justifyContent(FlexAlign.SpaceAround)
 
+        Row() {
+          this.EntranceItem($r('sys.symbol.music'), '本地音乐', 'LocalMusicPage')
+          this.EntranceItem($r('sys.symbol.cloud'), '云同步', 'CloudSyncPage')
+          this.EntranceItem($r('sys.symbol.heart'), '我的收藏', 'MyFavoritePage')
+          this.EntranceItem($r('sys.symbol.clock'), '最近播放', 'RecentPlayPage')
+          this.EntranceItem($r('sys.symbol.star_fill'), '排行榜', 'ChartsPage')
+        }
+        .width('100%')
+        .padding({ top: 20, bottom: 20 })
+        .backgroundColor(Color.White)
+        .borderRadius(24)
+        .margin({ bottom: 12 })
+
         Column() {
           Row() {
             Text('自建歌单')
@@ -189,19 +202,6 @@ export struct MineView {
         .backgroundColor(Color.White)
         .borderRadius(24)
         .padding({ bottom: 12 })
-        .margin({ bottom: 12 })
-
-        Row() {
-          this.EntranceItem($r('sys.symbol.music'), '本地音乐', 'LocalMusicPage')
-          this.EntranceItem($r('sys.symbol.cloud'), '云同步', 'CloudSyncPage')
-          this.EntranceItem($r('sys.symbol.heart'), '我的收藏', 'MyFavoritePage')
-          this.EntranceItem($r('sys.symbol.clock'), '最近播放', 'RecentPlayPage')
-          this.EntranceItem($r('sys.symbol.star_fill'), '排行榜', 'ChartsPage')
-        }
-        .width('100%')
-        .padding({ top: 20, bottom: 20 })
-        .backgroundColor(Color.White)
-        .borderRadius(24)
         .margin({ bottom: 12 })
       }
       .width('100%')

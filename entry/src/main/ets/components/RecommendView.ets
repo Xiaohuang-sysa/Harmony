@@ -124,7 +124,7 @@ export struct RecommendView {
           QuickAccessItem($r('sys.symbol.music'), '每日推荐', '#E3323D', () => {
             this.pathStack.pushPath({ name: 'DailyRecommendPage' });
           })
-          QuickAccessItem($r('sys.symbol.folder'), '歌单', '#007DFF', () => {
+          QuickAccessItem($r('sys.symbol.folder'), '热门歌单', '#007DFF', () => {
             this.pathStack.pushPath({ name: 'PlaylistCatalogPage' });
           })
           QuickAccessItem($r('sys.symbol.star'), '排行榜', '#FF9500', () => {
@@ -136,7 +136,7 @@ export struct RecommendView {
 
         Column({ space: 12 }) {
           Row() {
-            Text('猜你喜欢')
+            Text('热门歌单')
               .fontSize(18)
               .fontWeight(FontWeight.Bold)
               .fontColor('#ff000000')
@@ -147,40 +147,36 @@ export struct RecommendView {
           }
           .width('100%')
           
-          Scroll() {
-            Row({ space: 12 }) {
-              ForEach(this.playlistData, (item: Playlist) => {
-                Column({ space: 8 }) {
-                  Image(item.coverImgUrl)
-                    .width(104)
-                    .height(104)
-                    .borderRadius(20)
-                    .backgroundColor('#ffeeeeee')
-                    .objectFit(ImageFit.Cover)
-                    .onError(() => {
-                    })
-                  
-                  Text(item.name)
-                    .fontSize(13)
-                    .fontColor('#ff333333')
-                    .maxLines(2)
-                    .textOverflow({ overflow: TextOverflow.Ellipsis })
-                    .width('100%')
-                    .textAlign(TextAlign.Start)
-                }
-                .width(104)
-                .onClick(() => {
-                  PlaylistDetailParams.id = item.id;
-                  PlaylistDetailParams.title = item.name;
-                  PlaylistDetailParams.coverImgUrl = item.coverImgUrl;
-                  PlaylistDetailParams.description = item.description || '';
-                  this.pathStack.pushPath({ name: 'PlaylistDetailPage' });
-                })
-              }, (item: Playlist) => item.id.toString())
-            }
+          Row({ space: 12 }) {
+            ForEach(this.playlistData.slice(0, 5), (item: Playlist) => {
+              Column({ space: 8 }) {
+                Image(item.coverImgUrl)
+                  .width(104)
+                  .height(104)
+                  .borderRadius(20)
+                  .backgroundColor('#ffeeeeee')
+                  .objectFit(ImageFit.Cover)
+                  .onError(() => {
+                  })
+                
+                Text(item.name)
+                  .fontSize(13)
+                  .fontColor('#ff333333')
+                  .maxLines(2)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                  .width('100%')
+                  .textAlign(TextAlign.Start)
+              }
+              .width(104)
+              .onClick(() => {
+                PlaylistDetailParams.id = item.id;
+                PlaylistDetailParams.title = item.name;
+                PlaylistDetailParams.coverImgUrl = item.coverImgUrl;
+                PlaylistDetailParams.description = item.description || '';
+                this.pathStack.pushPath({ name: 'PlaylistDetailPage' });
+              })
+            }, (item: Playlist) => item.id.toString())
           }
-          .scrollable(ScrollDirection.Horizontal)
-          .scrollBar(BarState.Off)
           .width('100%')
         }
         .width('100%')
