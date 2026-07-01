@@ -5,6 +5,8 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 import { BannerItem } from '../entity/BannerItem';
 import { Playlist } from '../entity/Playlist';
 import { Song } from '../entity/Song';
+import { Artist } from '../entity/Artist';
+import { Album } from '../entity/Album';
 import { NoteItem } from '../entity/NoteItem';
 import { UserInfo } from '../entity/UserInfo';
 import { RoamChannel } from '../entity/RoamChannel';
@@ -338,17 +340,16 @@ export class HttpHelper {
           song.name = s.name;
           song.dt = s.dt;
           song.fee = s.fee;
+          const raw = s as unknown as Record<string, any>;
           if (s.ar && s.ar.length > 0) {
             song.ar = s.ar;
-          } else if ((s as Record<string, Object>)['artists'] && Array.isArray((s as Record<string, Object>)['artists'])) {
-            const artists = (s as Record<string, Object>)['artists'] as Artist[];
-            song.ar = artists;
+          } else if (raw['artists'] && Array.isArray(raw['artists'])) {
+            song.ar = raw['artists'] as Artist[];
           }
           if (s.al && s.al.name) {
             song.al = s.al;
-          } else if ((s as Record<string, Object>)['album']) {
-            const album = (s as Record<string, Object>)['album'] as Album;
-            song.al = album;
+          } else if (raw['album']) {
+            song.al = raw['album'] as Album;
           }
           result.push(song);
         }
