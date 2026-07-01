@@ -244,31 +244,31 @@ struct CustomPlaylistPage {
                   .width('100%')
                   .padding({ left: 16, right: 16 })
 
-                  if (this.isSearching) {
-                    Column() {
-                      LoadingProgress()
-                        .width(48)
-                        .height(48)
-                        .color('#E3323D')
-                    }
-                    .width('100%')
-                    .padding({ top: 40 })
-                    .justifyContent(FlexAlign.Center)
-                  } else if (this.searchResults.length === 0 && this.searchKeyword.trim()) {
-                    Column({ space: 8 }) {
-                      SymbolGlyph($r('sys.symbol.music'))
-                        .fontSize(32)
-                        .fontColor(['#ffcccccc'])
-                      Text('未找到相关歌曲')
-                        .fontSize(14)
-                        .fontColor('#ff999999')
-                    }
-                    .width('100%')
-                    .padding({ top: 40 })
-                    .justifyContent(FlexAlign.Center)
-                  } else {
-                    Scroll() {
-                      Column({ space: 10 }) {
+                  Scroll() {
+                    Column({ space: 10 }) {
+                      if (this.isSearching) {
+                        Column() {
+                          LoadingProgress()
+                            .width(48)
+                            .height(48)
+                            .color('#E3323D')
+                        }
+                        .width('100%')
+                        .padding({ top: 40 })
+                        .justifyContent(FlexAlign.Center)
+                      } else if (this.searchResults.length === 0 && this.searchKeyword.trim()) {
+                        Column({ space: 8 }) {
+                          SymbolGlyph($r('sys.symbol.music'))
+                            .fontSize(32)
+                            .fontColor(['#ffcccccc'])
+                          Text('未找到相关歌曲')
+                            .fontSize(14)
+                            .fontColor('#ff999999')
+                        }
+                        .width('100%')
+                        .padding({ top: 40 })
+                        .justifyContent(FlexAlign.Center)
+                      } else if (this.searchResults.length > 0) {
                         ForEach(this.searchResults, (item: Song) => {
                           Row({ space: 12 }) {
                             Image(item.al?.picUrl)
@@ -315,15 +315,15 @@ struct CustomPlaylistPage {
                           .borderRadius(16)
                         }, (item: Song) => item.id.toString())
                       }
-                      .width('100%')
-                      .padding({ left: 16, right: 16, top: 12, bottom: 40 })
                     }
                     .width('100%')
-                    .layoutWeight(1)
+                    .padding({ top: 12, bottom: 40 })
                   }
+                  .width('100%')
+                  .layoutWeight(1)
                 }
                 .width('100%')
-                .height('100%')
+                .layoutWeight(1)
               } else {
                 Scroll() {
                   Column({ space: 10 }) {
@@ -391,11 +391,11 @@ struct CustomPlaylistPage {
                   .padding({ left: 16, right: 16, top: 12, bottom: 40 })
                 }
                 .width('100%')
-                .height('100%')
+                .layoutWeight(1)
               }
             }
             .width('100%')
-            .height('100%')
+            .layoutWeight(1)
           }
         }
         .width('100%')

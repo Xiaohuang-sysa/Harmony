@@ -266,6 +266,9 @@ export class StorageHelper {
         const playlist = playlists.find(p => p.id === playlistId);
         if (playlist) {
           playlist.trackCount = songs.length;
+          if (!playlist.coverImgUrl && song.al && song.al.picUrl) {
+            playlist.coverImgUrl = song.al.picUrl;
+          }
           await StorageHelper.putObjectArray(StorageHelper.KEY_CUSTOM_PLAYLISTS, playlists);
           AppStorage.set<Playlist[]>('custom_playlists', playlists);
         }

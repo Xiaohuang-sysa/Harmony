@@ -136,7 +136,7 @@ export struct RecommendView {
 
         Column({ space: 12 }) {
           Row() {
-            Text('热门歌单')
+            Text('猜你喜欢')
               .fontSize(18)
               .fontWeight(FontWeight.Bold)
               .fontColor('#ff000000')
@@ -147,36 +147,40 @@ export struct RecommendView {
           }
           .width('100%')
           
-          Row({ space: 12 }) {
-            ForEach(this.playlistData.slice(0, 5), (item: Playlist) => {
-              Column({ space: 8 }) {
-                Image(item.coverImgUrl)
-                  .width(104)
-                  .height(104)
-                  .borderRadius(20)
-                  .backgroundColor('#ffeeeeee')
-                  .objectFit(ImageFit.Cover)
-                  .onError(() => {
-                  })
-                
-                Text(item.name)
-                  .fontSize(13)
-                  .fontColor('#ff333333')
-                  .maxLines(2)
-                  .textOverflow({ overflow: TextOverflow.Ellipsis })
-                  .width('100%')
-                  .textAlign(TextAlign.Start)
-              }
-              .width(104)
-              .onClick(() => {
-                PlaylistDetailParams.id = item.id;
-                PlaylistDetailParams.title = item.name;
-                PlaylistDetailParams.coverImgUrl = item.coverImgUrl;
-                PlaylistDetailParams.description = item.description || '';
-                this.pathStack.pushPath({ name: 'PlaylistDetailPage' });
-              })
-            }, (item: Playlist) => item.id.toString())
+          Scroll() {
+            Row({ space: 12 }) {
+              ForEach(this.playlistData.slice(0, 5), (item: Playlist) => {
+                Column({ space: 8 }) {
+                  Image(item.coverImgUrl)
+                    .width(104)
+                    .height(104)
+                    .borderRadius(20)
+                    .backgroundColor('#ffeeeeee')
+                    .objectFit(ImageFit.Cover)
+                    .onError(() => {
+                    })
+                  
+                  Text(item.name)
+                    .fontSize(13)
+                    .fontColor('#ff333333')
+                    .maxLines(2)
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+                    .width('100%')
+                    .textAlign(TextAlign.Start)
+                }
+                .width(104)
+                .onClick(() => {
+                  PlaylistDetailParams.id = item.id;
+                  PlaylistDetailParams.title = item.name;
+                  PlaylistDetailParams.coverImgUrl = item.coverImgUrl;
+                  PlaylistDetailParams.description = item.description || '';
+                  this.pathStack.pushPath({ name: 'PlaylistDetailPage' });
+                })
+              }, (item: Playlist) => item.id.toString())
+            }
           }
+          .scrollable(ScrollDirection.Horizontal)
+          .scrollBar(BarState.Off)
           .width('100%')
         }
         .width('100%')
