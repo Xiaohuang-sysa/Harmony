@@ -64,6 +64,7 @@ export struct LoginPage {
       userInfo.level = 1;
       
       AppStorage.set<string>(AppConstants.CACHE_USER, JSON.stringify(userInfo));
+      AppStorage.set<UserInfo>('cache_user', userInfo);
       AppStorage.set<boolean>('is_logged_in', true);
       
       setTimeout(() => {

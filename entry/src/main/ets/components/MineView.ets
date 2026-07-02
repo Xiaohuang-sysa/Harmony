@@ -11,8 +11,7 @@ export struct MineView {
   @Consume('pathStack') pathStack: NavPathStack;
   @StorageProp('custom_playlists') customPlaylists: Playlist[] = [];
   @StorageProp('is_logged_in') isLoggedIn: boolean = false;
-
-  @State userInfo: UserInfo = new UserInfo();
+  @StorageProp('cache_user') userInfo: UserInfo = new UserInfo();
   @State showCreateDialog: boolean = false;
   @State newPlaylistName: string = '';
 
@@ -27,7 +26,10 @@ export struct MineView {
   loadFromCache(): void {
     const userStr = AppStorage.get<string>(AppConstants.CACHE_USER);
     if (userStr) {
-      try { this.userInfo = JSON.parse(userStr); } catch (e) {}
+      try { 
+        const parsed = JSON.parse(userStr) as UserInfo;
+        AppStorage.set<UserInfo>('cache_user', parsed);
+      } catch (e) {}
     }
   }
 
