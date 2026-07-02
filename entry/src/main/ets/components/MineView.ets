@@ -10,6 +10,7 @@ import { Playlist } from '../entity/Playlist';
 export struct MineView {
   @Consume('pathStack') pathStack: NavPathStack;
   @StorageProp('custom_playlists') customPlaylists: Playlist[] = [];
+  @StorageProp('is_logged_in') isLoggedIn: boolean = false;
 
   @State userInfo: UserInfo = new UserInfo();
   @State showCreateDialog: boolean = false;
@@ -52,7 +53,7 @@ export struct MineView {
       Scroll() {
         Column() {
         Row() {
-          Image(this.userInfo.avatarUrl)
+          Image(this.userInfo.avatarUrl || '')
             .width(64)
             .height(64)
             .borderRadius(24)
@@ -62,7 +63,7 @@ export struct MineView {
             })
 
           Column() {
-            Text(this.userInfo.nickname || 'Harmony User')
+            Text(this.isLoggedIn ? this.userInfo.nickname : '点击登录')
               .fontSize(20)
               .fontWeight(FontWeight.Bold)
               .fontColor('#1A1A1A')
@@ -88,6 +89,11 @@ export struct MineView {
         .width('100%')
         .padding({ top: 32, bottom: 20, left: 20, right: 20 })
         .alignItems(VerticalAlign.Center)
+        .onClick(() => {
+          if (!this.isLoggedIn) {
+            this.pathStack.pushPath({ name: 'LoginPage' });
+          }
+        })
 
         Row() {
           this.StatItem('关注', this.userInfo.follows.toString())
