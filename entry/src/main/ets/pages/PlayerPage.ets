@@ -57,15 +57,22 @@ export struct PlayerPage {
   async loadLyrics(songId: number): Promise<void> {
     const lrcText = await HttpHelper.fetchLyric(songId);
     this.lyricLines = LyricHelper.parseLrc(lrcText);
-    this.currentLyricIndex = LyricHelper.getCurrentIndex(this.lyricLines, this.current);
+    const idx = LyricHelper.getCurrentIndex(this.lyricLines, this.current);
+    this.currentLyricIndex = idx;
+    // 歌词加载后立即滚动到当前位置
+    if (idx >= 0 && this.lyricLines.length > 0) {
+      const scrollY = Math.max(0, idx * 44 - 160);
+      this.lyricScroll.scrollTo({ xOffset: 0, yOffset: scrollY, animation: { duration: 300 } });
+    }
   }
 
   aboutToUpdate(): void {
+    if (this.lyricLines.length === 0) return;
     const newIndex = LyricHelper.getCurrentIndex(this.lyricLines, this.current);
     if (newIndex !== this.currentLyricIndex) {
       this.currentLyricIndex = newIndex;
-      if (newIndex >= 0 && this.lyricLines.length > 0) {
-        // 滚动到当前歌词行（每行约 40px，偏移居中）
+      if (newIndex >= 0) {
+        // 滚动到当前歌词行，使其居中显示
         const scrollY = Math.max(0, newIndex * 44 - 160);
         this.lyricScroll.scrollTo({ xOffset: 0, yOffset: scrollY, animation: { duration: 400 } });
       }
@@ -159,26 +166,39 @@ export struct PlayerPage {
             .layoutWeight(1)
             .alignItems(HorizontalAlign.Center)
 
-            // Speed selector + mode + toggle lyrics/cover
+            // Mode + playlist + toggle lyrics/cover
             Row({ space: 10 }) {
               // Mode cycle button
-              SymbolGlyph(this.getModeIcon())
-                .fontSize(18)
-                .fontColor(['rgba(255,255,255,0.7)'])
+              if (this.currentMode === PlayMode.LOOP_SINGLE) {
+                Stack() {
+                  SymbolGlyph($r('sys.symbol.repeat'))
+                    .fontSize(18)
+                    .fontColor(['rgba(255,255,255,0.7)'])
+                  Text('1')
+                    .fontSize(9)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor(Color.White)
+                }
+                .width(24)
+                .height(24)
                 .onClick(() => {
                   this.cycleMode();
                 })
+              } else {
+                SymbolGlyph(this.getModeIcon())
+                  .fontSize(18)
+                  .fontColor(['rgba(255,255,255,0.7)'])
+                  .onClick(() => {
+                    this.cycleMode();
+                  })
+              }
 
-              // Speed button
-              Text(`x${this.currentSpeed.toFixed(1)}`)
-                .fontSize(12)
-                .fontWeight(FontWeight.Medium)
-                .fontColor(this.showSpeedMenu ? Color.White : 'rgba(255,255,255,0.6)')
-                .padding({ left: 6, right: 6, top: 2, bottom: 2 })
-                .backgroundColor(this.showSpeedMenu ? 'rgba(255,255,255,0.2)' : 'transparent')
-                .borderRadius(4)
+              // Playlist button
+              SymbolGlyph($r('sys.symbol.list_bullet'))
+                .fontSize(18)
+                .fontColor(['rgba(255,255,255,0.7)'])
                 .onClick(() => {
-                  this.showSpeedMenu = !this.showSpeedMenu;
+                  this.pathStack.pushPath({ name: 'PlaylistPage' });
                 })
 
               Text('词')
@@ -194,6 +214,7 @@ export struct PlayerPage {
                 .fontColor(['rgba(255,255,255,0.7)'])
                 .onClick(() => {
                   this.showPlaylistDialog = true;
+                  StorageHelper.loadCustomPlaylists();
                 })
             }
           }
@@ -201,29 +222,6 @@ export struct PlayerPage {
           .padding({ top: 40, left: 20, right: 20 })
           .height(72)
           .alignItems(VerticalAlign.Center)
-
-          // Speed selector menu
-          if (this.showSpeedMenu) {
-            Row({ space: 8 }) {
-              ForEach([0.5, 0.75, 1.0, 1.25, 1.5, 2.0], (speed: number) => {
-                Text(`${speed}x`)
-                  .fontSize(13)
-                  .fontWeight(speed === this.currentSpeed ? FontWeight.Bold : FontWeight.Regular)
-                  .fontColor(speed === this.currentSpeed ? Color.White : 'rgba(255,255,255,0.5)')
-                  .padding({ left: 12, right: 12, top: 6, bottom: 6 })
-                  .backgroundColor(speed === this.currentSpeed ? 'rgba(255,59,48,0.7)' : 'rgba(255,255,255,0.1)')
-                  .borderRadius(16)
-                  .onClick(() => {
-                    AvPlayerHelper.setSpeed(speed);
-                    this.showSpeedMenu = false;
-                  })
-                  .animation({ duration: 200 })
-              })
-            }
-            .width('100%')
-            .justifyContent(FlexAlign.Center)
-            .padding({ top: 8, bottom: 8 })
-          }
 
           // Album Cover (shown when lyrics are hidden)
           if (!this.showLyrics) {
@@ -327,14 +325,38 @@ export struct PlayerPage {
             .justifyContent(FlexAlign.Center)
           }
 
+          // Speed selector menu
+          if (this.showSpeedMenu) {
+            Row({ space: 8 }) {
+              ForEach([0.5, 0.75, 1.0, 1.25, 1.5, 2.0], (speed: number) => {
+                Text(`${speed}x`)
+                  .fontSize(12)
+                  .fontWeight(speed === this.currentSpeed ? FontWeight.Bold : FontWeight.Regular)
+                  .fontColor(speed === this.currentSpeed ? Color.White : 'rgba(255,255,255,0.5)')
+                  .padding({ left: 10, right: 10, top: 4, bottom: 4 })
+                  .backgroundColor(speed === this.currentSpeed ? 'rgba(255,59,48,0.7)' : 'rgba(255,255,255,0.1)')
+                  .borderRadius(14)
+                  .onClick(() => {
+                    AvPlayerHelper.setSpeed(speed);
+                    this.showSpeedMenu = false;
+                  })
+                  .animation({ duration: 200 })
+              })
+            }
+            .width('100%')
+            .justifyContent(FlexAlign.Center)
+            .padding({ top: 4, bottom: 4 })
+            .margin({ bottom: 4 })
+          }
+
           // Progress Bar
           Row() {
             Text(this.cStr)
               .fontSize(11)
               .fontColor('rgba(255, 255, 255, 0.6)')
-              .width(40)
+              .width(36)
               .textAlign(TextAlign.Start)
-            
+
             Slider({
               value: this.current,
               min: 0,
@@ -345,7 +367,7 @@ export struct PlayerPage {
               .trackColor('rgba(255, 255, 255, 0.2)')
               .selectedColor('#FF3B30')
               .layoutWeight(1)
-              .margin({ left: 8, right: 8 })
+              .margin({ left: 6, right: 6 })
               .onChange((value: number) => {
                 AvPlayerHelper.seekTo(value);
               })
@@ -353,11 +375,24 @@ export struct PlayerPage {
             Text(this.dStr)
               .fontSize(11)
               .fontColor('rgba(255, 255, 255, 0.6)')
-              .width(40)
+              .width(36)
               .textAlign(TextAlign.End)
+
+            // Speed rate button
+            Text(`x${this.currentSpeed.toFixed(1)}`)
+              .fontSize(11)
+              .fontWeight(FontWeight.Medium)
+              .fontColor(this.showSpeedMenu ? Color.White : 'rgba(255,255,255,0.6)')
+              .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+              .backgroundColor(this.showSpeedMenu ? 'rgba(255,255,255,0.2)' : 'transparent')
+              .borderRadius(4)
+              .margin({ left: 8 })
+              .onClick(() => {
+                this.showSpeedMenu = !this.showSpeedMenu;
+              })
           }
           .width('90%')
-          .margin({ top: 12, bottom: 20 })
+          .margin({ top: 12, bottom: 16 })
 
           // Playback Controls
           Row() {
@@ -447,6 +482,7 @@ export struct PlayerPage {
                     .onClick(() => {
                       if (this.song) {
                         StorageHelper.addSongToPlaylist(item.id, this.song);
+                        StorageHelper.loadCustomPlaylists();
                         this.showPlaylistDialog = false;
                       }
                     })

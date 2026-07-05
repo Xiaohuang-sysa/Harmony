@@ -65,13 +65,21 @@ export struct MiniPlayer {
           this.pathStack.pushPath({ name: 'PlayerPage' });
         })
 
-        // 右侧：播放/暂停 + 列表
+        // 右侧：播放/暂停 + 下一首 + 列表
         SymbolGlyph(this.isPlaying ? $r('sys.symbol.pause_fill') : $r('sys.symbol.play_fill'))
           .fontSize(28)
           .fontColor([Color.White])
-          .margin({ right: 12 })
+          .margin({ right: 10 })
           .onClick(() => {
             AvPlayerHelper.togglePlay();
+          })
+
+        SymbolGlyph($r('sys.symbol.forward_end_fill'))
+          .fontSize(22)
+          .fontColor(['rgba(255,255,255,0.8)'])
+          .margin({ right: 10 })
+          .onClick(() => {
+            AvPlayerHelper.nextSong();
           })
 
         SymbolGlyph($r('sys.symbol.list_bullet'))

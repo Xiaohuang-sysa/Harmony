@@ -4,6 +4,7 @@ import { StorageHelper } from '../helper/StorageHelper';
 import { AppConstants } from '../constants/AppConstants';
 import { UserInfo } from '../entity/UserInfo';
 import { Playlist } from '../entity/Playlist';
+import { CustomPlaylistParams } from '../pages/CustomPlaylistPage';
 
 
 @Component
@@ -14,6 +15,9 @@ export struct MineView {
   @StorageProp('cache_user') userInfo: UserInfo = new UserInfo();
   @State showCreateDialog: boolean = false;
   @State newPlaylistName: string = '';
+  @State showDeleteConfirm: boolean = false;
+  @State deleteTargetId: number = 0;
+  @State deleteTargetName: string = '';
 
   async aboutToAppear() {
     this.loadFromCache();
@@ -48,6 +52,19 @@ export struct MineView {
       this.newPlaylistName = '';
       this.showCreateDialog = false;
     }
+  }
+
+  confirmDeletePlaylist(id: number, name: string): void {
+    this.deleteTargetId = id;
+    this.deleteTargetName = name;
+    this.showDeleteConfirm = true;
+  }
+
+  async deletePlaylist(): Promise<void> {
+    await StorageHelper.deletePlaylist(this.deleteTargetId);
+    this.showDeleteConfirm = false;
+    this.deleteTargetId = 0;
+    this.deleteTargetName = '';
   }
 
   build() {
@@ -188,17 +205,20 @@ export struct MineView {
                   }
                   .alignItems(HorizontalAlign.Start)
                   .layoutWeight(1)
-                  
-                  SymbolGlyph($r('sys.symbol.more'))
-                    .fontSize(20)
+
+                  SymbolGlyph($r('sys.symbol.trash'))
+                    .fontSize(18)
                     .fontColor(['#ff999999'])
+                    .onClick(() => {
+                      this.confirmDeletePlaylist(item.id, item.name);
+                    })
                 }
                 .width('100%')
                 .padding(12)
                 .backgroundColor('#fff9f9f9')
                 .borderRadius(16)
                 .onClick(() => {
-                  AppStorage.set<number>('current_playlist_id', item.id);
+                  CustomPlaylistParams.id = item.id;
                   this.pathStack.pushPath({ name: 'CustomPlaylistPage' });
                 })
               }, (item: Playlist) => item.id.toString())
@@ -278,6 +298,60 @@ export struct MineView {
         .onClick(() => {
           this.showCreateDialog = false;
           this.newPlaylistName = '';
+        })
+      }
+
+      if (this.showDeleteConfirm) {
+        Column() {
+          Column() {
+            Text('确认删除歌单')
+              .fontSize(18)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#ff333333')
+              .margin({ bottom: 12 })
+
+            Text(`确定要删除「${this.deleteTargetName}」吗？`)
+              .fontSize(14)
+              .fontColor('#ff666666')
+              .margin({ bottom: 20 })
+            
+            Row({ space: 12 }) {
+              Button('取消')
+                .width(120)
+                .height(44)
+                .backgroundColor('#fff5f5f5')
+                .fontColor('#ff666666')
+                .borderRadius(22)
+                .onClick(() => {
+                  this.showDeleteConfirm = false;
+                })
+              
+              Button('删除')
+                .width(120)
+                .height(44)
+                .backgroundColor('#ffFF4D4F')
+                .fontColor(Color.White)
+                .borderRadius(22)
+                .onClick(() => {
+                  this.deletePlaylist();
+                })
+            }
+            .width('100%')
+            .justifyContent(FlexAlign.Center)
+            .margin({ top: 24 })
+          }
+          .width('80%')
+          .backgroundColor(Color.White)
+          .borderRadius(24)
+          .padding({ top: 24, bottom: 24, left: 20, right: 20 })
+          .shadow({ radius: 20, color: 'rgba(0,0,0,0.15)', offsetY: 10 })
+        }
+        .width('100%')
+        .height('100%')
+        .backgroundColor('rgba(0,0,0,0.5)')
+        .justifyContent(FlexAlign.Center)
+        .onClick(() => {
+          this.showDeleteConfirm = false;
         })
       }
     }
