@@ -1,4 +1,3 @@
-import { HttpHelper } from '../helper/HttpHelper';
 import { StorageHelper } from '../helper/StorageHelper';
 import { AppConstants } from '../constants/AppConstants';
 import { UserInfo } from '../entity/UserInfo';
@@ -9,8 +8,8 @@ import { CustomPlaylistParams } from '../pages/CustomPlaylistPage';
 @Component
 export struct MineView {
   @Consume('pathStack') pathStack: NavPathStack;
-  @StorageProp('custom_playlists') customPlaylists: Playlist[] = [];
-  @StorageProp('playlist_version') @Watch('onPlaylistChanged') playlistVersion: number = 0;
+  @Consume('refresh_trigger') @Watch('onRefresh') refreshTrigger: number = 0;
+  @State customPlaylists: Playlist[] = [];
   @StorageProp('is_logged_in') isLoggedIn: boolean = false;
   @StorageProp('cache_user') userInfo: UserInfo = new UserInfo();
   @State showCreateDialog: boolean = false;
@@ -21,39 +20,31 @@ export struct MineView {
 
   async aboutToAppear() {
     this.loadFromCache();
-    await StorageHelper.loadCustomPlaylists();
-    if (this.userInfo.nickname === '') {
-      await this.refreshData();
-    }
+    await this.loadPlaylists();
   }
 
   loadFromCache(): void {
     const userStr = AppStorage.get<string>(AppConstants.CACHE_USER);
     if (userStr) {
-      try { 
+      try {
         const parsed = JSON.parse(userStr) as UserInfo;
         AppStorage.set<UserInfo>('cache_user', parsed);
       } catch (e) {}
     }
   }
 
-  async refreshData(): Promise<void> {
-    const user = await HttpHelper.fetchUserDetail(12345) as UserInfo;
-    if (user.nickname !== '') {
-      this.userInfo = user;
-      AppStorage.set<string>(AppConstants.CACHE_USER, JSON.stringify(user));
-    }
-    AppStorage.set<number>(AppConstants.CACHE_FETCH_TIME, Date.now());
+  async loadPlaylists(): Promise<void> {
+    this.customPlaylists = await StorageHelper.getCustomPlaylists();
   }
 
-  onPlaylistChanged(): void {
-    StorageHelper.loadCustomPlaylists();
+  onRefresh(): void {
+    this.loadPlaylists();
   }
 
   async createPlaylist(): Promise<void> {
     if (this.newPlaylistName.trim()) {
       await StorageHelper.createPlaylist(this.newPlaylistName.trim());
-      AppStorage.set<number>('playlist_version', Date.now());
+      await this.loadPlaylists();
       this.newPlaylistName = '';
       this.showCreateDialog = false;
     }
@@ -67,7 +58,7 @@ export struct MineView {
 
   async deletePlaylist(): Promise<void> {
     await StorageHelper.deletePlaylist(this.deleteTargetId);
-    AppStorage.set<number>('playlist_version', Date.now());
+    await this.loadPlaylists();
     this.showDeleteConfirm = false;
     this.deleteTargetId = 0;
     this.deleteTargetName = '';

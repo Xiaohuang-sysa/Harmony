@@ -13,6 +13,7 @@ export class AvPlayerHelper {
   private static lastCStr: string = '';
   private static readonly TIME_UPDATE_THROTTLE: number = 300;
   private static isTransitioning: boolean = false;
+  private static urlCache: Map<number, string> = new Map();
 
   /**
    * 初始化全局播放状态（绑定至 AppStorage）
@@ -36,6 +37,7 @@ export class AvPlayerHelper {
     AppStorage.setOrCreate<string[]>('recent_searches', []);
     AppStorage.setOrCreate<Playlist[]>('custom_playlists', []);
     AppStorage.setOrCreate<number>('playlist_version', 0);
+    AppStorage.setOrCreate<boolean>('is_logged_in', false);
 
     AvPlayerHelper.isInitialized = true;
   }
@@ -149,8 +151,14 @@ export class AvPlayerHelper {
     // 记录播放历史
     StorageHelper.addPlayHistory(song);
 
-    // 获取播放URL
-    const url = await HttpHelper.getSongUrl(song.id);
+    // 获取播放URL（优先使用缓存）
+    let url = AvPlayerHelper.urlCache.get(song.id);
+    if (!url) {
+      url = await HttpHelper.getSongUrl(song.id);
+      if (url) {
+        AvPlayerHelper.urlCache.set(song.id, url);
+      }
+    }
     if (!url) {
       hilog.warn(0x0000, 'AvPlayerHelper', 'No URL available for this song, skipping...');
       AvPlayerHelper.isTransitioning = false;

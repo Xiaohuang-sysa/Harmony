@@ -10,6 +10,7 @@ import { MiniPlayer } from '../components/MiniPlayer';
 @Component
 struct Index {
   @Provide('pathStack') pathStack: NavPathStack = new NavPathStack();
+  @Provide('refresh_trigger') refreshTrigger: number = 0;
   @State currentIndex: number = 0;
 
   async aboutToAppear(): Promise<void> {
@@ -22,6 +23,7 @@ struct Index {
     await StorageHelper.loadFavorites();
     await StorageHelper.loadCustomPlaylists();
     await StorageHelper.restorePlaybackState();
+    StorageHelper.loadLoginState();
     // 初始化播放列表
     PlaylistHelper.init();
   }
@@ -64,6 +66,9 @@ struct Index {
           .barHeight(56)
           .onChange((index: number) => {
             this.currentIndex = index;
+            if (index === 2) {
+              this.refreshTrigger = Date.now();
+            }
           })
           .scrollable(false)
 

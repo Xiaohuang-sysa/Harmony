@@ -1,6 +1,7 @@
 import { preferences } from '@kit.ArkData';
 import { Song } from '../entity/Song';
 import { Playlist } from '../entity/Playlist';
+import { UserInfo } from '../entity/UserInfo';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 
 export class StorageHelper {
@@ -17,6 +18,8 @@ export class StorageHelper {
   static readonly KEY_PLAY_POSITION = 'play_position';
   static readonly KEY_CUSTOM_PLAYLISTS = 'custom_playlists';
   static readonly KEY_PLAYLIST_SONGS_PREFIX = 'playlist_songs_';
+  static readonly KEY_LOGIN_STATE = 'login_state';
+  static readonly KEY_USER_INFO = 'user_info';
 
   static async init(context: Context): Promise<void> {
     try {
@@ -310,5 +313,23 @@ export class StorageHelper {
         AppStorage.set<Playlist[]>('custom_playlists', playlists.slice());
       }
     } catch {}
+  }
+
+  static async loadLoginState(): Promise<void> {
+    try {
+      const json = await StorageHelper.get(StorageHelper.KEY_LOGIN_STATE);
+      if (json) {
+        AppStorage.set<boolean>('is_logged_in', json === 'true');
+      }
+      const userJson = await StorageHelper.get(StorageHelper.KEY_USER_INFO);
+      if (userJson) {
+        AppStorage.set<UserInfo>('cache_user', JSON.parse(userJson) as UserInfo);
+      }
+    } catch {}
+  }
+
+  static async saveLoginState(isLoggedIn: boolean, userInfo: UserInfo): Promise<void> {
+    await StorageHelper.put(StorageHelper.KEY_LOGIN_STATE, isLoggedIn.toString());
+    await StorageHelper.put(StorageHelper.KEY_USER_INFO, JSON.stringify(userInfo));
   }
 }

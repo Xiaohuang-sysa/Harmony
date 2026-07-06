@@ -74,22 +74,18 @@ struct CustomPlaylistPage {
     if (!this.selectedSong) return;
     const updatedSongs = await StorageHelper.removeSongFromPlaylist(this.getCurrentPlaylistId(), this.selectedSong.id);
     this.songs = updatedSongs.slice();
-    AppStorage.set<number>('playlist_version', Date.now());
     this.showActionSheet = false;
     this.selectedSong = null;
   }
 
   async deletePlaylist(): Promise<void> {
     await StorageHelper.deletePlaylist(this.getCurrentPlaylistId());
-    // 递增版本号触发 MineView 刷新
-    AppStorage.set<number>('playlist_version', Date.now());
     this.pathStack.pop();
   }
 
   async addSong(song: Song): Promise<void> {
     const updatedSongs = await StorageHelper.addSongToPlaylist(this.getCurrentPlaylistId(), song);
     this.songs = updatedSongs.slice();
-    AppStorage.set<number>('playlist_version', Date.now());
   }
 
   async addToFavorites(song: Song): Promise<void> {
