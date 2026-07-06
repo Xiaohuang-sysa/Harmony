@@ -150,6 +150,13 @@ export class CloudDBHelper {
     await store.delete(predicates);
   }
 
+  static async deleteSongBySongId(songId: number, userId: string): Promise<void> {
+    const store = CloudDBHelper.ensureStore();
+    const predicates = new relationalStore.RdbPredicates('cloud_songs');
+    predicates.equalTo('songId', songId).and().equalTo('userId', userId);
+    await store.delete(predicates);
+  }
+
   static async updateSong(song: CloudSongObject): Promise<void> {
     const store = CloudDBHelper.ensureStore();
     const valueBucket: relationalStore.ValuesBucket = {

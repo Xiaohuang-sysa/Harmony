@@ -87,7 +87,7 @@ export struct CloudSyncPage {
     if (!this.songToDelete) return;
     this.isLoading = true;
     try {
-      await CloudDBHelper.deleteSong(this.songToDelete.id, this.userId);
+      await CloudDBHelper.deleteSongBySongId(this.songToDelete.id, this.userId);
       this.cloudSongs = this.cloudSongs.filter(s => s.id !== this.songToDelete?.id);
     } catch (err) {
       console.error('Failed to delete cloud song', JSON.stringify(err));
