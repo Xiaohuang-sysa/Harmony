@@ -19,7 +19,7 @@ export struct PlayerPage {
   @Consume('pathStack') pathStack: NavPathStack;
 
   @StorageProp('songDetail') @Watch('onSongChange') song: Song | null = null;
-  @StorageProp('current') current: number = 0;
+  @StorageProp('current') @Watch('onTimeUpdate') current: number = 0;
   @StorageProp('duration') duration: number = 0;
   @StorageProp('cStr') cStr: string = '00:00';
   @StorageProp('dStr') dStr: string = '00:00';
@@ -63,17 +63,19 @@ export struct PlayerPage {
 
   scrollToLyricIndex(index: number): void {
     if (index < 0 || this.lyricLines.length === 0) return;
-    // +1 补偿顶部的 Header spacer
     const targetIndex = index + 1;
     this.lyricScroll.scrollToIndex(targetIndex, true, ScrollAlign.CENTER);
   }
 
-  aboutToUpdate(): void {
+  onTimeUpdate(): void {
     if (this.lyricLines.length === 0) return;
     const newIndex = LyricHelper.getCurrentIndex(this.lyricLines, this.current);
     if (newIndex !== this.currentLyricIndex) {
       this.currentLyricIndex = newIndex;
-      this.scrollToLyricIndex(newIndex);
+      // 延时确保 List 已完成渲染再滚动
+      setTimeout(() => {
+        this.scrollToLyricIndex(newIndex);
+      }, 50);
     }
   }
 
