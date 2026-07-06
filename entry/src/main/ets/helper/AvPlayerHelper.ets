@@ -71,7 +71,7 @@ export class AvPlayerHelper {
           // 恢复播放速率（reset 后速率会重置为 1.0）
           const savedSpeed = AppStorage.get<number>('playback_speed') || 1.0;
           if (savedSpeed !== 1.0) {
-            AvPlayerHelper.avPlayer?.setSpeed(savedSpeed as PlaybackSpeed);
+            AvPlayerHelper.avPlayer?.setSpeed(savedSpeed);
           }
           break;
         case 'playing':
