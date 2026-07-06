@@ -12,6 +12,7 @@ export class AvPlayerHelper {
   private static lastTimeUpdate: number = 0;
   private static lastCStr: string = '';
   private static readonly TIME_UPDATE_THROTTLE: number = 300;
+  private static isTransitioning: boolean = false;
 
   /**
    * 初始化全局播放状态（绑定至 AppStorage）
@@ -68,6 +69,7 @@ export class AvPlayerHelper {
           break;
         case 'playing':
           AppStorage.set<boolean>('symbol', true);
+          AvPlayerHelper.isTransitioning = false;
           break;
         case 'paused':
         case 'stopped':
@@ -75,11 +77,15 @@ export class AvPlayerHelper {
           break;
         case 'completed':
           AppStorage.set<boolean>('symbol', false);
-          AvPlayerHelper.nextSong();
+          // 延迟切歌，避免在 stateChange 回调中重入 reset()
+          setTimeout(() => {
+            AvPlayerHelper.nextSong();
+          }, 100);
           break;
         case 'error':
           hilog.error(0x0000, 'AvPlayerHelper', 'AVPlayer error occurred');
           AppStorage.set<boolean>('symbol', false);
+          AvPlayerHelper.isTransitioning = false;
           break;
       }
     });
@@ -111,6 +117,9 @@ export class AvPlayerHelper {
     if (!AvPlayerHelper.avPlayer) {
       await AvPlayerHelper.initPlayer();
     }
+    // 防止重入
+    if (AvPlayerHelper.isTransitioning) return;
+    AvPlayerHelper.isTransitioning = true;
     
     // 获取全局播放队列
     let globalList: Song[] = (AppStorage.get<Song[]>('songList') || []).slice();
@@ -144,6 +153,7 @@ export class AvPlayerHelper {
     const url = await HttpHelper.getSongUrl(song.id);
     if (!url) {
       hilog.warn(0x0000, 'AvPlayerHelper', 'No URL available for this song, skipping...');
+      AvPlayerHelper.isTransitioning = false;
       AvPlayerHelper.nextSong();
       return;
     }

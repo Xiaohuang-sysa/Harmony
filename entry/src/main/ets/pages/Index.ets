@@ -12,15 +12,15 @@ struct Index {
   @Provide('pathStack') pathStack: NavPathStack = new NavPathStack();
   @State currentIndex: number = 0;
 
-  aboutToAppear(): void {
+  async aboutToAppear(): Promise<void> {
     // 页面加载前初始化全局状态机与播放器骨架
     AvPlayerHelper.initGlobalState();
     AvPlayerHelper.initPlayer();
     // 初始化本地存储并加载已保存的数据
-    StorageHelper.init(getContext(this));
-    StorageHelper.loadPlayHistory();
-    StorageHelper.loadFavorites();
-    StorageHelper.restorePlaybackState();
+    await StorageHelper.init(getContext(this));
+    await StorageHelper.loadPlayHistory();
+    await StorageHelper.loadFavorites();
+    await StorageHelper.restorePlaybackState();
     // 初始化播放列表
     PlaylistHelper.init();
   }

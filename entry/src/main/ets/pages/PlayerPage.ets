@@ -495,6 +495,7 @@ export struct PlayerPage {
                     .onClick(async () => {
                       if (this.song) {
                         await StorageHelper.addSongToPlaylist(item.id, this.song);
+                        AppStorage.set<number>('playlist_version', Date.now());
                         this.showPlaylistDialog = false;
                       }
                     })
