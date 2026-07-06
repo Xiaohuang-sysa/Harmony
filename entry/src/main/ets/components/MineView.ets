@@ -3,6 +3,7 @@ import { AppConstants } from '../constants/AppConstants';
 import { UserInfo } from '../entity/UserInfo';
 import { Playlist } from '../entity/Playlist';
 import { CustomPlaylistParams } from '../pages/CustomPlaylistPage';
+import { UserDatabaseHelper } from '../helper/UserDatabaseHelper';
 
 
 @Component
@@ -18,6 +19,7 @@ export struct MineView {
   @State showDeleteConfirm: boolean = false;
   @State deleteTargetId: number = 0;
   @State deleteTargetName: string = '';
+  @State showLogoutConfirm: boolean = false;
 
   async aboutToAppear() {
     this.loadFromCache();
@@ -65,6 +67,14 @@ export struct MineView {
     this.deleteTargetName = '';
   }
 
+  async logout(): Promise<void> {
+    await UserDatabaseHelper.clearSession();
+    AppStorage.set<boolean>('is_logged_in', false);
+    AppStorage.set<number>('current_user_id', 0);
+    AppStorage.set<UserInfo>('cache_user', new UserInfo());
+    this.showLogoutConfirm = false;
+  }
+
   build() {
     Stack() {
       Scroll() {
@@ -93,6 +103,16 @@ export struct MineView {
           SymbolGlyph($r('sys.symbol.chevron_right'))
             .fontSize(24)
             .fontColor(['#999999'])
+
+          if (this.isLoggedIn) {
+            SymbolGlyph($r('sys.symbol.rectangle_portrait_on_rectangle_portrait'))
+              .fontSize(20)
+              .fontColor(['#FF4D4F'])
+              .margin({ left: 12 })
+              .onClick(() => {
+                this.showLogoutConfirm = true;
+              })
+          }
         }
         .width('100%')
         .padding({ top: 32, bottom: 20, left: 20, right: 20 })
@@ -338,6 +358,60 @@ export struct MineView {
         .justifyContent(FlexAlign.Center)
         .onClick(() => {
           this.showDeleteConfirm = false;
+        })
+      }
+
+      if (this.showLogoutConfirm) {
+        Column() {
+          Column() {
+            Text('退出登录')
+              .fontSize(18)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#ff333333')
+              .margin({ bottom: 12 })
+
+            Text('确定要退出当前账号吗？')
+              .fontSize(14)
+              .fontColor('#ff666666')
+              .margin({ bottom: 20 })
+
+            Row({ space: 12 }) {
+              Button('取消')
+                .width(120)
+                .height(44)
+                .backgroundColor('#fff5f5f5')
+                .fontColor('#ff666666')
+                .borderRadius(22)
+                .onClick(() => {
+                  this.showLogoutConfirm = false;
+                })
+
+              Button('退出')
+                .width(120)
+                .height(44)
+                .backgroundColor('#ffFF4D4F')
+                .fontColor(Color.White)
+                .borderRadius(22)
+                .onClick(() => {
+                  this.logout();
+                })
+            }
+            .width('100%')
+            .justifyContent(FlexAlign.Center)
+            .margin({ top: 24 })
+          }
+          .width('80%')
+          .backgroundColor(Color.White)
+          .borderRadius(24)
+          .padding({ top: 24, bottom: 24, left: 20, right: 20 })
+          .shadow({ radius: 20, color: 'rgba(0,0,0,0.15)', offsetY: 10 })
+        }
+        .width('100%')
+        .height('100%')
+        .backgroundColor('rgba(0,0,0,0.5)')
+        .justifyContent(FlexAlign.Center)
+        .onClick(() => {
+          this.showLogoutConfirm = false;
         })
       }
     }
