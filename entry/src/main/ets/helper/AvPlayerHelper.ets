@@ -2,7 +2,6 @@ import { media } from '@kit.MediaKit';
 import { Song } from '../entity/Song';
 import { PlayMode } from '../constants/AppConstants';
 import { HttpHelper } from './HttpHelper';
-import { PlaylistHelper } from './PlaylistHelper';
 import { StorageHelper } from './StorageHelper';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 
@@ -25,7 +24,7 @@ export class AvPlayerHelper {
     AppStorage.setOrCreate<number>('index', 0);
     AppStorage.setOrCreate<Song[]>('songList', []);
     AppStorage.setOrCreate<Song | null>('songDetail', null);
-    AppStorage.setOrCreate<number>('current_mode', PlayMode.SEQUENCE);
+    AppStorage.setOrCreate<number>('current_mode', PlayMode.LOOP_LIST);
     AppStorage.setOrCreate<number>('playback_speed', 1.0);
     AppStorage.setOrCreate<Song[]>('play_history', []);
     AppStorage.setOrCreate<Song[]>('favorites', []);
@@ -90,30 +89,39 @@ export class AvPlayerHelper {
   }
 
   /**
-   * 播放指定歌曲
+   * 播放指定歌曲，自动加入全局播放队列
+   * - 歌曲总是加入全局 songList（不替换）
+   * - sourceList 中的歌曲合并入全局队列
+   * - 播放器严格按全局队列顺序播放
    */
-  public static async playMusic(song: Song): Promise<void> {
+  public static async playMusic(song: Song, sourceList?: Song[]): Promise<void> {
     if (!AvPlayerHelper.avPlayer) {
       await AvPlayerHelper.initPlayer();
     }
     
-    // 更新播放列表索引
-    const rawSongList = AppStorage.get<Song[]>('songList') || [];
-    const idx = rawSongList.findIndex(s => s.id === song.id);
-    if (idx !== -1) {
-      AppStorage.set<number>('index', idx);
-    } else {
-      // 没在列表里就插到开头并更新列表
-      const newList: Song[] = rawSongList.slice();
-      newList.unshift(song);
-      AppStorage.set<Song[]>('songList', newList);
-      AppStorage.set<number>('index', 0);
+    // 获取全局播放队列
+    let globalList: Song[] = (AppStorage.get<Song[]>('songList') || []).slice();
+    
+    // 将来源列表合并入全局队列（去重）
+    if (sourceList && sourceList.length > 0) {
+      for (const s of sourceList) {
+        if (!globalList.some(item => item.id === s.id)) {
+          globalList.push(s);
+        }
+      }
     }
+    
+    // 将点击的歌曲加入全局队列（去重）
+    if (!globalList.some(s => s.id === song.id)) {
+      globalList.push(song);
+    }
+    
+    // 找到歌曲在全局队列中的位置
+    const idx = globalList.findIndex(s => s.id === song.id);
+    AppStorage.set<number>('index', idx !== -1 ? idx : globalList.length - 1);
+    AppStorage.set<Song[]>('songList', globalList);
 
-    // 自动加入播放列表
-    PlaylistHelper.addSong(song);
-
-    // 更新详情
+    // 更新歌曲详情
     AvPlayerHelper.httpSongDetail(song);
 
     // 记录播放历史

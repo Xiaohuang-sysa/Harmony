@@ -80,14 +80,19 @@ export struct PlayerPage {
   }
 
   cycleMode(): void {
-    const newMode: number = (this.currentMode + 1) % 4;
+    let newMode: number;
+    if (this.currentMode === PlayMode.LOOP_LIST) {
+      newMode = PlayMode.RANDOM;
+    } else if (this.currentMode === PlayMode.RANDOM) {
+      newMode = PlayMode.LOOP_SINGLE;
+    } else {
+      newMode = PlayMode.LOOP_LIST;
+    }
     AppStorage.set<number>('current_mode', newMode);
   }
 
   getModeIcon(): Resource {
-    if (this.currentMode === PlayMode.SEQUENCE) {
-      return $r('sys.symbol.list_bullet');
-    } else if (this.currentMode === PlayMode.LOOP_LIST) {
+    if (this.currentMode === PlayMode.LOOP_LIST) {
       return $r('sys.symbol.repeat');
     } else if (this.currentMode === PlayMode.RANDOM) {
       return $r('sys.symbol.shuffle');
