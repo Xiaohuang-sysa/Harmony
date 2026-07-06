@@ -1,5 +1,6 @@
 import { media } from '@kit.MediaKit';
 import { Song } from '../entity/Song';
+import { Playlist } from '../entity/Playlist';
 import { PlayMode } from '../constants/AppConstants';
 import { HttpHelper } from './HttpHelper';
 import { StorageHelper } from './StorageHelper';
@@ -10,7 +11,7 @@ export class AvPlayerHelper {
   private static isInitialized: boolean = false;
   private static lastTimeUpdate: number = 0;
   private static lastCStr: string = '';
-  private static readonly TIME_UPDATE_THROTTLE: number = 500;
+  private static readonly TIME_UPDATE_THROTTLE: number = 300;
 
   /**
    * 初始化全局播放状态（绑定至 AppStorage）
@@ -32,6 +33,8 @@ export class AvPlayerHelper {
     AppStorage.setOrCreate<Song[]>('play_history', []);
     AppStorage.setOrCreate<Song[]>('favorites', []);
     AppStorage.setOrCreate<string[]>('recent_searches', []);
+    AppStorage.setOrCreate<Playlist[]>('custom_playlists', []);
+    AppStorage.setOrCreate<number>('playlist_version', 0);
 
     AvPlayerHelper.isInitialized = true;
   }
@@ -149,8 +152,6 @@ export class AvPlayerHelper {
       const state = AvPlayerHelper.avPlayer?.state;
       if (state === 'playing' || state === 'paused' || state === 'completed' || state === 'prepared' || state === 'stopped') {
         await AvPlayerHelper.avPlayer?.reset();
-        // 等待状态机稳定
-        await new Promise<void>((r) => setTimeout(r, 50));
       }
       if (AvPlayerHelper.avPlayer) {
         AvPlayerHelper.avPlayer.url = url;

@@ -79,6 +79,8 @@ struct CustomPlaylistPage {
     this.songs = updatedSongs.slice();
     // 强制刷新 AppStorage 确保 MineView 同步
     await StorageHelper.loadCustomPlaylists();
+    // 递增版本号触发 MineView 刷新
+    AppStorage.set<number>('playlist_version', Date.now());
     this.showActionSheet = false;
     this.selectedSong = null;
     this.refreshFlag++;
@@ -86,6 +88,8 @@ struct CustomPlaylistPage {
 
   async deletePlaylist(): Promise<void> {
     await StorageHelper.deletePlaylist(this.getCurrentPlaylistId());
+    // 递增版本号触发 MineView 刷新
+    AppStorage.set<number>('playlist_version', Date.now());
     this.pathStack.pop();
   }
 
@@ -94,6 +98,8 @@ struct CustomPlaylistPage {
     this.songs = updatedSongs.slice();
     // 强制刷新 AppStorage 确保 MineView 同步
     await StorageHelper.loadCustomPlaylists();
+    // 递增版本号触发 MineView 刷新
+    AppStorage.set<number>('playlist_version', Date.now());
     this.refreshFlag++;
   }
 

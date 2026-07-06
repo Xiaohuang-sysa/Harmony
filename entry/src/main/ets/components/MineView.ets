@@ -11,6 +11,7 @@ import { CustomPlaylistParams } from '../pages/CustomPlaylistPage';
 export struct MineView {
   @Consume('pathStack') pathStack: NavPathStack;
   @StorageProp('custom_playlists') customPlaylists: Playlist[] = [];
+  @StorageProp('playlist_version') @Watch('onPlaylistChanged') playlistVersion: number = 0;
   @StorageProp('is_logged_in') isLoggedIn: boolean = false;
   @StorageProp('cache_user') userInfo: UserInfo = new UserInfo();
   @State showCreateDialog: boolean = false;
@@ -46,9 +47,14 @@ export struct MineView {
     AppStorage.set<number>(AppConstants.CACHE_FETCH_TIME, Date.now());
   }
 
+  onPlaylistChanged(): void {
+    StorageHelper.loadCustomPlaylists();
+  }
+
   async createPlaylist(): Promise<void> {
     if (this.newPlaylistName.trim()) {
       await StorageHelper.createPlaylist(this.newPlaylistName.trim());
+      AppStorage.set<number>('playlist_version', Date.now());
       this.newPlaylistName = '';
       this.showCreateDialog = false;
     }
@@ -62,6 +68,7 @@ export struct MineView {
 
   async deletePlaylist(): Promise<void> {
     await StorageHelper.deletePlaylist(this.deleteTargetId);
+    AppStorage.set<number>('playlist_version', Date.now());
     this.showDeleteConfirm = false;
     this.deleteTargetId = 0;
     this.deleteTargetName = '';
@@ -72,15 +79,6 @@ export struct MineView {
       Scroll() {
         Column() {
         Row() {
-          Image(this.userInfo.avatarUrl || '')
-            .width(64)
-            .height(64)
-            .borderRadius(24)
-            .backgroundColor('#E5E5E5')
-            .objectFit(ImageFit.Cover)
-            .onError(() => {
-            })
-
           Column() {
             Text(this.isLoggedIn ? this.userInfo.nickname : '点击登录')
               .fontSize(20)
