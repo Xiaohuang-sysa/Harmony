@@ -188,9 +188,6 @@ export struct MineView {
                       .fontColor('#ff333333')
                       .maxLines(1)
                       .textOverflow({ overflow: TextOverflow.Ellipsis })
-                    Text(`${item.trackCount} 首歌曲`)
-                      .fontSize(12)
-                      .fontColor('#ff999999')
                   }
                   .alignItems(HorizontalAlign.Start)
                   .layoutWeight(1)
