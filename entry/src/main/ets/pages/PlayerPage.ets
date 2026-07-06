@@ -290,7 +290,7 @@ export struct PlayerPage {
             List({ scroller: this.lyricScroll }) {
               // Header spacer for centering first line
               ListItem() {
-                Blank().height(160)
+                Row().height(160)
               }
 
               ForEach(this.lyricLines, (line: LyricLine, index: number) => {
@@ -308,7 +308,7 @@ export struct PlayerPage {
 
               // Footer spacer for centering last line
               ListItem() {
-                Blank().height(160)
+                Row().height(160)
               }
             }
             .width('100%')
