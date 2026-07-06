@@ -493,10 +493,9 @@ export struct PlayerPage {
                     .padding(12)
                     .backgroundColor('#fff5f5f5')
                     .borderRadius(12)
-                    .onClick(() => {
+                    .onClick(async () => {
                       if (this.song) {
-                        StorageHelper.addSongToPlaylist(item.id, this.song);
-                        StorageHelper.loadCustomPlaylists();
+                        await StorageHelper.addSongToPlaylist(item.id, this.song);
                         this.showPlaylistDialog = false;
                       }
                     })
