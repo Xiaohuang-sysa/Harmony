@@ -1,5 +1,4 @@
 import { UserDatabaseHelper, User } from '../helper/UserDatabaseHelper';
-import { StorageHelper } from '../helper/StorageHelper';
 import { AppConstants } from '../constants/AppConstants';
 import { UserInfo } from '../entity/UserInfo';
 import getContext from '@ohos.app.ability.common';
@@ -67,7 +66,9 @@ export struct LoginPage {
       AppStorage.set<string>(AppConstants.CACHE_USER, JSON.stringify(userInfo));
       AppStorage.set<UserInfo>('cache_user', userInfo);
       AppStorage.set<boolean>('is_logged_in', true);
-      StorageHelper.saveLoginState(true, userInfo);
+      AppStorage.setOrCreate<number>('current_user_id', user.id);
+      AppStorage.setOrCreate<string>('current_user_nickname', user.nickname);
+      await UserDatabaseHelper.saveSession(user.id, user.username, user.nickname, user.avatarUrl);
       
       setTimeout(() => {
         this.pathStack.pop();

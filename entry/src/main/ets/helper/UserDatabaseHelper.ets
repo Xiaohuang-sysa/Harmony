@@ -28,6 +28,17 @@ export class UserDatabaseHelper {
     )
   `;
 
+  private static readonly CREATE_SESSION_TABLE_SQL = `
+    CREATE TABLE IF NOT EXISTS user_session (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL UNIQUE,
+      username TEXT NOT NULL,
+      nickname TEXT DEFAULT '',
+      avatarUrl TEXT DEFAULT '',
+      login_time INTEGER NOT NULL
+    )
+  `;
+
   static setContext(context: Context): void {
     UserDatabaseHelper.appContext = context;
   }
@@ -56,6 +67,7 @@ export class UserDatabaseHelper {
 
       UserDatabaseHelper.rdbStore = await relationalStore.getRdbStore(context, config);
       await UserDatabaseHelper.rdbStore.executeSql(UserDatabaseHelper.CREATE_TABLE_SQL);
+      await UserDatabaseHelper.rdbStore.executeSql(UserDatabaseHelper.CREATE_SESSION_TABLE_SQL);
     } catch (err) {
       console.error(`UserDatabaseHelper init failed: ${JSON.stringify(err)}`);
       throw new Error(`UserDatabaseHelper init failed: ${JSON.stringify(err)}`);
@@ -185,6 +197,62 @@ export class UserDatabaseHelper {
     } catch (err) {
       console.error(`UserDatabaseHelper isUsernameExists failed: ${JSON.stringify(err)}`);
       return false;
+    }
+  }
+
+  // ==================== 登录会话管理（SQLite） ====================
+
+  static async saveSession(userId: number, username: string, nickname: string, avatarUrl: string): Promise<void> {
+    await UserDatabaseHelper.ensureInit();
+    try {
+      // 先清空旧会话（确保只有一条会话记录）
+      await UserDatabaseHelper.rdbStore!.executeSql('DELETE FROM user_session');
+      const values: relationalStore.ValuesBucket = {
+        user_id: userId,
+        username: username,
+        nickname: nickname,
+        avatarUrl: avatarUrl,
+        login_time: Date.now()
+      };
+      await UserDatabaseHelper.rdbStore!.insert('user_session', values);
+    } catch (err) {
+      console.error(`UserDatabaseHelper saveSession failed: ${JSON.stringify(err)}`);
+    }
+  }
+
+  static async loadSession(): Promise<User | null> {
+    await UserDatabaseHelper.ensureInit();
+    try {
+      const result = await UserDatabaseHelper.rdbStore!.querySql(
+        'SELECT * FROM user_session ORDER BY login_time DESC LIMIT 1'
+      );
+      if (result.rowCount > 0) {
+        result.goToFirstRow();
+        const user: User = {
+          id: result.getLong(result.getColumnIndex('user_id')),
+          username: result.getString(result.getColumnIndex('username')),
+          password: '',
+          nickname: result.getString(result.getColumnIndex('nickname')),
+          avatarUrl: result.getString(result.getColumnIndex('avatarUrl')),
+          createdAt: 0
+        };
+        result.close();
+        return user;
+      }
+      result.close();
+      return null;
+    } catch (err) {
+      console.error(`UserDatabaseHelper loadSession failed: ${JSON.stringify(err)}`);
+      return null;
+    }
+  }
+
+  static async clearSession(): Promise<void> {
+    await UserDatabaseHelper.ensureInit();
+    try {
+      await UserDatabaseHelper.rdbStore!.executeSql('DELETE FROM user_session');
+    } catch (err) {
+      console.error(`UserDatabaseHelper clearSession failed: ${JSON.stringify(err)}`);
     }
   }
 }

@@ -37,10 +37,11 @@ export struct CloudSyncPage {
   @State selectedSong: CloudSong | null = null;
   @State syncStatus: string = '已同步';
   @State syncTime: string = '刚刚';
-  @State userId: string = 'default_user';
+  @State userId: string = '';
   @State showClearAllConfirm: boolean = false;
 
   async aboutToAppear() {
+    this.userId = AppStorage.get<number>('current_user_id')?.toString() || 'default_user';
     await this.initCloudDB();
     await this.loadCloudSongs();
   }

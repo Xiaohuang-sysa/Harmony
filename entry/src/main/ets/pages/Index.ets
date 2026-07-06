@@ -1,6 +1,9 @@
 import { AvPlayerHelper } from '../helper/AvPlayerHelper';
 import { StorageHelper } from '../helper/StorageHelper';
 import { PlaylistHelper } from '../helper/PlaylistHelper';
+import { UserDatabaseHelper } from '../helper/UserDatabaseHelper';
+import { UserInfo } from '../entity/UserInfo';
+import { AppConstants } from '../constants/AppConstants';
 import { FoundView } from '../components/FoundView';
 import { RecommendView } from '../components/RecommendView';
 import { MineView } from '../components/MineView';
@@ -23,9 +26,26 @@ struct Index {
     await StorageHelper.loadFavorites();
     await StorageHelper.loadCustomPlaylists();
     await StorageHelper.restorePlaybackState();
-    StorageHelper.loadLoginState();
+    // 初始化用户数据库并恢复登录会话（SQLite）
+    await UserDatabaseHelper.init(getContext(this));
+    await Index.restoreSession();
     // 初始化播放列表
     PlaylistHelper.init();
+  }
+
+  static async restoreSession(): Promise<void> {
+    const session = await UserDatabaseHelper.loadSession();
+    if (session) {
+      AppStorage.set<boolean>('is_logged_in', true);
+      AppStorage.setOrCreate<number>('current_user_id', session.id);
+      AppStorage.setOrCreate<string>('current_user_nickname', session.nickname);
+      const userInfo = new UserInfo();
+      userInfo.userId = session.id;
+      userInfo.nickname = session.nickname;
+      userInfo.avatarUrl = session.avatarUrl;
+      AppStorage.set<string>(AppConstants.CACHE_USER, JSON.stringify(userInfo));
+      AppStorage.set<UserInfo>('cache_user', userInfo);
+    }
   }
 
   @Builder tabBuilder(index: number, title: string, icon: Resource) {

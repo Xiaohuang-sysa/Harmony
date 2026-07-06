@@ -371,7 +371,8 @@ export class CloudDBHelper {
   }
 
   static async queryPlaylistSongs(playlistId: number): Promise<CloudPlaylistSongObject[]> {
-    return CloudDBHelper.getCloudPlaylistSongs(playlistId, 'default_user');
+    const userId = AppStorage.get<number>('current_user_id')?.toString() || 'default_user';
+    return CloudDBHelper.getCloudPlaylistSongs(playlistId, userId);
   }
 
   static async queryFavorites(userId: string): Promise<CloudFavoriteObject[]> {
