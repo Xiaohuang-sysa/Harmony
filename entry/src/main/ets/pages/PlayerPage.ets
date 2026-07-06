@@ -72,10 +72,7 @@ export struct PlayerPage {
     const newIndex = LyricHelper.getCurrentIndex(this.lyricLines, this.current);
     if (newIndex !== this.currentLyricIndex) {
       this.currentLyricIndex = newIndex;
-      // 延时确保 List 已完成渲染再滚动
-      setTimeout(() => {
-        this.scrollToLyricIndex(newIndex);
-      }, 50);
+      this.scrollToLyricIndex(newIndex);
     }
   }
 
@@ -320,7 +317,9 @@ export struct PlayerPage {
             .edgeEffect(EdgeEffect.None)
             .onAppear(() => {
               if (this.currentLyricIndex >= 0) {
-                this.scrollToLyricIndex(this.currentLyricIndex);
+                setTimeout(() => {
+                  this.scrollToLyricIndex(this.currentLyricIndex);
+                }, 100);
               }
             })
           } else {

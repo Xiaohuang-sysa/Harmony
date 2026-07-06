@@ -8,6 +8,8 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 export class AvPlayerHelper {
   private static avPlayer: media.AVPlayer | null = null;
   private static isInitialized: boolean = false;
+  private static lastTimeUpdate: number = 0;
+  private static readonly TIME_UPDATE_THROTTLE: number = 250;
 
   /**
    * 初始化全局播放状态（绑定至 AppStorage）
@@ -79,6 +81,9 @@ export class AvPlayerHelper {
     });
 
     AvPlayerHelper.avPlayer.on('timeUpdate', (time: number) => {
+      const now = Date.now();
+      if (now - AvPlayerHelper.lastTimeUpdate < AvPlayerHelper.TIME_UPDATE_THROTTLE) return;
+      AvPlayerHelper.lastTimeUpdate = now;
       AppStorage.set<number>('current', time);
       AppStorage.set<string>('cStr', AvPlayerHelper.formatTime(time));
     });

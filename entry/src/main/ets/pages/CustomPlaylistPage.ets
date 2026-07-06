@@ -71,6 +71,8 @@ struct CustomPlaylistPage {
     if (!this.selectedSong) return;
     const updatedSongs = await StorageHelper.removeSongFromPlaylist(this.getCurrentPlaylistId(), this.selectedSong.id);
     this.songs = updatedSongs.slice();
+    // 强制刷新 AppStorage 确保 MineView 同步
+    await StorageHelper.loadCustomPlaylists();
     this.showActionSheet = false;
     this.selectedSong = null;
     this.refreshFlag++;
@@ -84,6 +86,8 @@ struct CustomPlaylistPage {
   async addSong(song: Song): Promise<void> {
     const updatedSongs = await StorageHelper.addSongToPlaylist(this.getCurrentPlaylistId(), song);
     this.songs = updatedSongs.slice();
+    // 强制刷新 AppStorage 确保 MineView 同步
+    await StorageHelper.loadCustomPlaylists();
     this.refreshFlag++;
   }
 
