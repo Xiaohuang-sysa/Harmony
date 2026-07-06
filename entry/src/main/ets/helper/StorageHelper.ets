@@ -226,6 +226,7 @@ export class StorageHelper {
       playlists.push(newPlaylist);
       await StorageHelper.putObjectArray(StorageHelper.KEY_CUSTOM_PLAYLISTS, playlists);
       AppStorage.set<Playlist[]>('custom_playlists', playlists.slice());
+      AppStorage.set<number>('playlist_version', Date.now());
       return newPlaylist;
     } catch (err) {
       hilog.error(0x0000, 'StorageHelper', `createPlaylist failed: ${JSON.stringify(err)}`);
@@ -240,6 +241,7 @@ export class StorageHelper {
       await StorageHelper.putObjectArray(StorageHelper.KEY_CUSTOM_PLAYLISTS, playlists);
       await StorageHelper.put(`${StorageHelper.KEY_PLAYLIST_SONGS_PREFIX}${playlistId}`, '[]');
       AppStorage.set<Playlist[]>('custom_playlists', playlists.slice());
+      AppStorage.set<number>('playlist_version', Date.now());
     } catch (err) {
       hilog.error(0x0000, 'StorageHelper', `deletePlaylist failed: ${JSON.stringify(err)}`);
     }
@@ -274,6 +276,7 @@ export class StorageHelper {
           }
           await StorageHelper.putObjectArray(StorageHelper.KEY_CUSTOM_PLAYLISTS, playlists);
           AppStorage.set<Playlist[]>('custom_playlists', playlists.slice());
+          AppStorage.set<number>('playlist_version', Date.now());
         }
       }
       return songs;
@@ -297,6 +300,7 @@ export class StorageHelper {
         playlist.coverImgUrl = songs.length > 0 && songs[0].al ? songs[0].al.picUrl || '' : '';
         await StorageHelper.putObjectArray(StorageHelper.KEY_CUSTOM_PLAYLISTS, playlists);
         AppStorage.set<Playlist[]>('custom_playlists', playlists.slice());
+        AppStorage.set<number>('playlist_version', Date.now());
       }
       return songs;
     } catch (err) {

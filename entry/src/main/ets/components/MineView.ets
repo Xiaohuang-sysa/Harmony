@@ -9,6 +9,7 @@ import { CustomPlaylistParams } from '../pages/CustomPlaylistPage';
 export struct MineView {
   @Consume('pathStack') pathStack: NavPathStack;
   @Consume('refresh_trigger') @Watch('onRefresh') refreshTrigger: number = 0;
+  @StorageProp('playlist_version') @Watch('onRefresh') playlistVersion: number = 0;
   @State customPlaylists: Playlist[] = [];
   @StorageProp('is_logged_in') isLoggedIn: boolean = false;
   @StorageProp('cache_user') userInfo: UserInfo = new UserInfo();

@@ -68,6 +68,11 @@ export class AvPlayerHelper {
           AppStorage.set<number>('duration', duration);
           AppStorage.set<string>('dStr', AvPlayerHelper.formatTime(duration));
           await AvPlayerHelper.avPlayer?.play();
+          // 恢复播放速率（reset 后速率会重置为 1.0）
+          const savedSpeed = AppStorage.get<number>('playback_speed') || 1.0;
+          if (savedSpeed !== 1.0) {
+            AvPlayerHelper.avPlayer?.setSpeed(savedSpeed as PlaybackSpeed);
+          }
           break;
         case 'playing':
           AppStorage.set<boolean>('symbol', true);
@@ -145,8 +150,8 @@ export class AvPlayerHelper {
     AppStorage.set<number>('index', idx !== -1 ? idx : globalList.length - 1);
     AppStorage.set<Song[]>('songList', globalList);
 
-    // 更新歌曲详情
-    AvPlayerHelper.httpSongDetail(song);
+    // 更新歌曲详情（后台执行，不阻塞播放流程）
+    AvPlayerHelper.httpSongDetail(song).catch(() => {});
 
     // 记录播放历史
     StorageHelper.addPlayHistory(song);
