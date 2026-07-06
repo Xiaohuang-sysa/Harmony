@@ -223,7 +223,7 @@ export class StorageHelper {
       };
       playlists.push(newPlaylist);
       await StorageHelper.putObjectArray(StorageHelper.KEY_CUSTOM_PLAYLISTS, playlists);
-      AppStorage.set<Playlist[]>('custom_playlists', playlists);
+      AppStorage.set<Playlist[]>('custom_playlists', playlists.slice());
       return newPlaylist;
     } catch (err) {
       hilog.error(0x0000, 'StorageHelper', `createPlaylist failed: ${JSON.stringify(err)}`);
@@ -237,7 +237,7 @@ export class StorageHelper {
       playlists = playlists.filter(p => p.id !== playlistId);
       await StorageHelper.putObjectArray(StorageHelper.KEY_CUSTOM_PLAYLISTS, playlists);
       await StorageHelper.put(`${StorageHelper.KEY_PLAYLIST_SONGS_PREFIX}${playlistId}`, '[]');
-      AppStorage.set<Playlist[]>('custom_playlists', playlists);
+      AppStorage.set<Playlist[]>('custom_playlists', playlists.slice());
     } catch (err) {
       hilog.error(0x0000, 'StorageHelper', `deletePlaylist failed: ${JSON.stringify(err)}`);
     }
@@ -248,7 +248,7 @@ export class StorageHelper {
     return await StorageHelper.getObjectArray<Song>(key);
   }
 
-  static async addSongToPlaylist(playlistId: number, song: Song): Promise<void> {
+  static async addSongToPlaylist(playlistId: number, song: Song): Promise<Song[]> {
     try {
       const key = `${StorageHelper.KEY_PLAYLIST_SONGS_PREFIX}${playlistId}`;
       let songs = await StorageHelper.getPlaylistSongs(playlistId);
@@ -266,20 +266,22 @@ export class StorageHelper {
         const playlist = playlists.find(p => p.id === playlistId);
         if (playlist) {
           playlist.trackCount = songs.length;
-          if (!playlist.coverImgUrl && song.al && song.al.picUrl) {
+          // 只有新增第一首歌时更新封面为首首歌封面
+          if (songs.length === 1 && song.al && song.al.picUrl) {
             playlist.coverImgUrl = song.al.picUrl;
           }
           await StorageHelper.putObjectArray(StorageHelper.KEY_CUSTOM_PLAYLISTS, playlists);
-          AppStorage.set<Playlist[]>('custom_playlists', playlists);
+          AppStorage.set<Playlist[]>('custom_playlists', playlists.slice());
         }
-        AppStorage.set<Song[]>(`playlist_songs_${playlistId}`, songs);
       }
+      return songs;
     } catch (err) {
       hilog.error(0x0000, 'StorageHelper', `addSongToPlaylist failed: ${JSON.stringify(err)}`);
+      return await StorageHelper.getPlaylistSongs(playlistId);
     }
   }
 
-  static async removeSongFromPlaylist(playlistId: number, songId: number): Promise<void> {
+  static async removeSongFromPlaylist(playlistId: number, songId: number): Promise<Song[]> {
     try {
       const key = `${StorageHelper.KEY_PLAYLIST_SONGS_PREFIX}${playlistId}`;
       let songs = await StorageHelper.getPlaylistSongs(playlistId);
@@ -289,12 +291,15 @@ export class StorageHelper {
       const playlist = playlists.find(p => p.id === playlistId);
       if (playlist) {
         playlist.trackCount = songs.length;
+        // 封面跟随第一首歌
+        playlist.coverImgUrl = songs.length > 0 && songs[0].al ? songs[0].al.picUrl || '' : '';
         await StorageHelper.putObjectArray(StorageHelper.KEY_CUSTOM_PLAYLISTS, playlists);
-        AppStorage.set<Playlist[]>('custom_playlists', playlists);
+        AppStorage.set<Playlist[]>('custom_playlists', playlists.slice());
       }
-      AppStorage.set<Song[]>(`playlist_songs_${playlistId}`, songs);
+      return songs;
     } catch (err) {
       hilog.error(0x0000, 'StorageHelper', `removeSongFromPlaylist failed: ${JSON.stringify(err)}`);
+      return await StorageHelper.getPlaylistSongs(playlistId);
     }
   }
 
@@ -303,7 +308,7 @@ export class StorageHelper {
       const json = await StorageHelper.get(StorageHelper.KEY_CUSTOM_PLAYLISTS);
       if (json) {
         const playlists = JSON.parse(json) as Playlist[];
-        AppStorage.set<Playlist[]>('custom_playlists', playlists);
+        AppStorage.set<Playlist[]>('custom_playlists', playlists.slice());
       }
     } catch {}
   }

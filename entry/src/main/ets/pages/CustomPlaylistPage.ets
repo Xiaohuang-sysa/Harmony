@@ -47,9 +47,15 @@ struct CustomPlaylistPage {
   }
 
   async aboutToAppear() {
-    // 确保 StorageHelper 已初始化
     const context = getContext(this) as Context;
     await StorageHelper.init(context);
+    // 验证歌单是否仍存在，防止访问已删除的歌单
+    const playlists = await StorageHelper.getCustomPlaylists();
+    const playlist = playlists.find(p => p.id === this.getCurrentPlaylistId());
+    if (!playlist) {
+      this.pathStack.pop();
+      return;
+    }
     await this.loadPlaylistInfo();
     await this.loadSongs();
   }

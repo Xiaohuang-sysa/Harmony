@@ -9,7 +9,8 @@ export class AvPlayerHelper {
   private static avPlayer: media.AVPlayer | null = null;
   private static isInitialized: boolean = false;
   private static lastTimeUpdate: number = 0;
-  private static readonly TIME_UPDATE_THROTTLE: number = 250;
+  private static lastCStr: string = '';
+  private static readonly TIME_UPDATE_THROTTLE: number = 500;
 
   /**
    * 初始化全局播放状态（绑定至 AppStorage）
@@ -85,7 +86,11 @@ export class AvPlayerHelper {
       if (now - AvPlayerHelper.lastTimeUpdate < AvPlayerHelper.TIME_UPDATE_THROTTLE) return;
       AvPlayerHelper.lastTimeUpdate = now;
       AppStorage.set<number>('current', time);
-      AppStorage.set<string>('cStr', AvPlayerHelper.formatTime(time));
+      const cStr = AvPlayerHelper.formatTime(time);
+      if (cStr !== AvPlayerHelper.lastCStr) {
+        AvPlayerHelper.lastCStr = cStr;
+        AppStorage.set<string>('cStr', cStr);
+      }
     });
 
     AvPlayerHelper.avPlayer.on('error', (err) => {
@@ -144,6 +149,8 @@ export class AvPlayerHelper {
       const state = AvPlayerHelper.avPlayer?.state;
       if (state === 'playing' || state === 'paused' || state === 'completed' || state === 'prepared' || state === 'stopped') {
         await AvPlayerHelper.avPlayer?.reset();
+        // 等待状态机稳定
+        await new Promise<void>((r) => setTimeout(r, 50));
       }
       if (AvPlayerHelper.avPlayer) {
         AvPlayerHelper.avPlayer.url = url;
