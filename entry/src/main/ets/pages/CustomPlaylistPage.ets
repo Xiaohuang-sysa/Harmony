@@ -133,7 +133,7 @@ struct CustomPlaylistPage {
                 .margin({ left: 8 })
               Blank()
               Button() {
-                SymbolGlyph($r('sys.symbol.square_and_pencil'))
+                SymbolGlyph($r('sys.symbol.plus'))
                   .fontSize(20)
                   .fontColor(['#007DFF'])
               }
