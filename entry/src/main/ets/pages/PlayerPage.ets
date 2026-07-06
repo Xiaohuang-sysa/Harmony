@@ -59,11 +59,13 @@ export struct PlayerPage {
     this.lyricLines = LyricHelper.parseLrc(lrcText);
     const idx = LyricHelper.getCurrentIndex(this.lyricLines, this.current);
     this.currentLyricIndex = idx;
-    // 歌词加载后立即滚动到当前位置
-    if (idx >= 0 && this.lyricLines.length > 0) {
-      const scrollY = Math.max(0, idx * 44 - 160);
-      this.lyricScroll.scrollTo({ xOffset: 0, yOffset: scrollY, animation: { duration: 300 } });
-    }
+  }
+
+  scrollToLyricIndex(index: number): void {
+    if (index < 0 || this.lyricLines.length === 0) return;
+    // +1 补偿顶部的 Header spacer
+    const targetIndex = index + 1;
+    this.lyricScroll.scrollToIndex(targetIndex, true, ScrollAlign.CENTER);
   }
 
   aboutToUpdate(): void {
@@ -71,11 +73,7 @@ export struct PlayerPage {
     const newIndex = LyricHelper.getCurrentIndex(this.lyricLines, this.current);
     if (newIndex !== this.currentLyricIndex) {
       this.currentLyricIndex = newIndex;
-      if (newIndex >= 0) {
-        // 滚动到当前歌词行，使其居中显示
-        const scrollY = Math.max(0, newIndex * 44 - 160);
-        this.lyricScroll.scrollTo({ xOffset: 0, yOffset: scrollY, animation: { duration: 400 } });
-      }
+      this.scrollToLyricIndex(newIndex);
     }
   }
 
@@ -289,12 +287,14 @@ export struct PlayerPage {
 
           // Lyrics Area
           if (this.lyricLines.length > 0) {
-            Scroll(this.lyricScroll) {
-              Column() {
-                // Spacer to center the current line
-                Column().height(160)
+            List({ scroller: this.lyricScroll }) {
+              // Header spacer for centering first line
+              ListItem() {
+                Blank().height(160)
+              }
 
-                ForEach(this.lyricLines, (line: LyricLine, index: number | undefined) => {
+              ForEach(this.lyricLines, (line: LyricLine, index: number) => {
+                ListItem() {
                   Text(line.text)
                     .fontSize(16)
                     .fontColor(index === this.currentLyricIndex ? Color.White : 'rgba(255,255,255,0.4)')
@@ -303,17 +303,24 @@ export struct PlayerPage {
                     .textAlign(TextAlign.Center)
                     .padding({ top: 10, bottom: 10 })
                     .animation({ duration: 300 })
-                })
+                }
+              })
 
-                // Bottom spacer
-                Column().height(160)
+              // Footer spacer for centering last line
+              ListItem() {
+                Blank().height(160)
               }
-              .width('100%')
             }
             .width('100%')
             .layoutWeight(1)
+            .divider({ strokeWidth: 0 })
             .scrollBar(BarState.Off)
             .edgeEffect(EdgeEffect.None)
+            .onAppear(() => {
+              if (this.currentLyricIndex >= 0) {
+                this.scrollToLyricIndex(this.currentLyricIndex);
+              }
+            })
           } else {
             // Empty state for lyrics
             Column() {
