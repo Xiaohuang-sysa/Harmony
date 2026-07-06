@@ -1,83 +1,63 @@
 import { Song } from '../entity/Song';
 
-/**
+/** 
  * 播放列表管理
- * 自动记录所有点播过的歌曲，支持排序和删除
+ * 全局播放队列，点击任意歌曲即加入队列，严格按队列顺序播放
  */
 export class PlaylistHelper {
   /** 初始化播放列表存储 */
   public static init(): void {
-    const existing = AppStorage.get<Song[]>('playlist');
+    const existing = AppStorage.get<Song[]>('songList');
     if (!existing) {
-      AppStorage.setOrCreate<Song[]>('playlist', []);
+      AppStorage.setOrCreate<Song[]>('songList', []);
     }
-  }
-
-  /** 获取播放列表 */
-  public static getPlaylist(): Song[] {
-    return AppStorage.get<Song[]>('playlist') || [];
-  }
-
-  /** 添加歌曲到播放列表（已在顶部则移到最前） */
-  public static addSong(song: Song): void {
-    const list: Song[] = (AppStorage.get<Song[]>('playlist') || []).slice();
-    const idx = list.findIndex(s => s.id === song.id);
-    if (idx !== -1) {
-      list.splice(idx, 1);
-    }
-    list.unshift(song);
-    if (list.length > 200) {
-      list.pop();
-    }
-    AppStorage.set<Song[]>('playlist', list);
   }
 
   /** 上移 */
   public static moveUp(index: number): void {
     if (index <= 0) return;
-    const list: Song[] = (AppStorage.get<Song[]>('playlist') || []).slice();
+    const list: Song[] = (AppStorage.get<Song[]>('songList') || []).slice();
     const temp = list[index];
     list[index] = list[index - 1];
     list[index - 1] = temp;
-    AppStorage.set<Song[]>('playlist', list);
+    AppStorage.set<Song[]>('songList', list);
+    PlaylistHelper.updateCurrentIndex(list, index - 1);
   }
 
   /** 下移 */
   public static moveDown(index: number): void {
-    const list: Song[] = (AppStorage.get<Song[]>('playlist') || []).slice();
+    const list: Song[] = (AppStorage.get<Song[]>('songList') || []).slice();
     if (index >= list.length - 1) return;
     const temp = list[index];
     list[index] = list[index + 1];
     list[index + 1] = temp;
-    AppStorage.set<Song[]>('playlist', list);
+    AppStorage.set<Song[]>('songList', list);
+    PlaylistHelper.updateCurrentIndex(list, index + 1);
   }
 
   /** 删除歌曲 */
   public static removeSong(index: number): void {
-    const list: Song[] = (AppStorage.get<Song[]>('playlist') || []).slice();
+    const list: Song[] = (AppStorage.get<Song[]>('songList') || []).slice();
     if (index < 0 || index >= list.length) return;
     list.splice(index, 1);
-    AppStorage.set<Song[]>('playlist', list);
+    AppStorage.set<Song[]>('songList', list);
+    PlaylistHelper.updateCurrentIndex(list, Math.min(index, list.length - 1));
   }
 
   /** 清空列表 */
   public static clearAll(): void {
-    AppStorage.set<Song[]>('playlist', []);
+    AppStorage.set<Song[]>('songList', []);
+    AppStorage.set<number>('index', 0);
   }
-
-  /** 从指定索引位置播放 */
-  public static playAtIndex(index: number): void {
-    const list = PlaylistHelper.getPlaylist();
-    if (index < 0 || index >= list.length) return;
-    const songList: Song[] = (AppStorage.get<Song[]>('songList') || []).slice();
-    const song = list[index];
-    const si = songList.findIndex(s => s.id === song.id);
-    if (si === -1) {
-      songList.unshift(song);
-      AppStorage.set<Song[]>('songList', songList);
+  
+  /** 更新当前播放索引 */
+  private static updateCurrentIndex(list: Song[], newIndex: number): void {
+    if (list.length === 0) {
+      AppStorage.set<number>('index', 0);
+      return;
     }
-    AppStorage.set<number>('index', si === -1 ? 0 : si);
-    AppStorage.set<Song>('songDetail', song);
-    AppStorage.set<boolean>('needs_play', true);
+    if (newIndex < 0) newIndex = 0;
+    if (newIndex >= list.length) newIndex = list.length - 1;
+    AppStorage.set<number>('index', newIndex);
   }
 }

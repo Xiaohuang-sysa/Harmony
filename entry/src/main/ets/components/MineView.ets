@@ -1,5 +1,4 @@
 import { HttpHelper } from '../helper/HttpHelper';
-import { AvPlayerHelper } from '../helper/AvPlayerHelper';
 import { StorageHelper } from '../helper/StorageHelper';
 import { AppConstants } from '../constants/AppConstants';
 import { UserInfo } from '../entity/UserInfo';

@@ -20,6 +20,7 @@ struct Index {
     await StorageHelper.init(getContext(this));
     await StorageHelper.loadPlayHistory();
     await StorageHelper.loadFavorites();
+    await StorageHelper.loadCustomPlaylists();
     await StorageHelper.restorePlaybackState();
     // 初始化播放列表
     PlaylistHelper.init();

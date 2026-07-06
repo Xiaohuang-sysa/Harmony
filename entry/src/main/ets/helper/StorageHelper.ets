@@ -125,7 +125,6 @@ export class StorageHelper {
   // 恢复播放状态
   static async restorePlaybackState(): Promise<void> {
     try {
-      const position = await StorageHelper.get(StorageHelper.KEY_PLAY_POSITION);
       const mode = await StorageHelper.get(StorageHelper.KEY_PLAY_MODE);
       const speed = await StorageHelper.get(StorageHelper.KEY_PLAYBACK_SPEED);
       if (mode) AppStorage.set<number>('current_mode', parseInt(mode));

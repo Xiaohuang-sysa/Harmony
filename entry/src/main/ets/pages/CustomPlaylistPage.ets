@@ -28,7 +28,6 @@ struct CustomPlaylistPage {
   @State searchKeyword: string = '';
   @State searchResults: Song[] = [];
   @State isSearching: boolean = false;
-  @State refreshFlag: number = 0;
   @State showActionSheet: boolean = false;
   @State selectedSong: Song | null = null;
   @State showDeletePlaylistConfirm: boolean = false;
@@ -47,8 +46,6 @@ struct CustomPlaylistPage {
   }
 
   async aboutToAppear() {
-    const context = getContext(this) as Context;
-    await StorageHelper.init(context);
     // 验证歌单是否仍存在，防止访问已删除的歌单
     const playlists = await StorageHelper.getCustomPlaylists();
     const playlist = playlists.find(p => p.id === this.getCurrentPlaylistId());
@@ -77,13 +74,9 @@ struct CustomPlaylistPage {
     if (!this.selectedSong) return;
     const updatedSongs = await StorageHelper.removeSongFromPlaylist(this.getCurrentPlaylistId(), this.selectedSong.id);
     this.songs = updatedSongs.slice();
-    // 强制刷新 AppStorage 确保 MineView 同步
-    await StorageHelper.loadCustomPlaylists();
-    // 递增版本号触发 MineView 刷新
     AppStorage.set<number>('playlist_version', Date.now());
     this.showActionSheet = false;
     this.selectedSong = null;
-    this.refreshFlag++;
   }
 
   async deletePlaylist(): Promise<void> {
@@ -96,15 +89,11 @@ struct CustomPlaylistPage {
   async addSong(song: Song): Promise<void> {
     const updatedSongs = await StorageHelper.addSongToPlaylist(this.getCurrentPlaylistId(), song);
     this.songs = updatedSongs.slice();
-    // 强制刷新 AppStorage 确保 MineView 同步
-    await StorageHelper.loadCustomPlaylists();
-    // 递增版本号触发 MineView 刷新
     AppStorage.set<number>('playlist_version', Date.now());
-    this.refreshFlag++;
   }
 
   async addToFavorites(song: Song): Promise<void> {
-    StorageHelper.toggleFavorite(song);
+    await StorageHelper.toggleFavorite(song);
     this.showActionSheet = false;
     this.selectedSong = null;
   }
@@ -367,7 +356,7 @@ struct CustomPlaylistPage {
                           }
                           .width('100%').padding(12)
                           .backgroundColor('#fff9f9f9').borderRadius(16)
-                        }, (item: Song) => `${item.id}_${this.refreshFlag}`)
+                        }, (item: Song) => item.id.toString())
                       }
                     }
                     .width('100%').padding({ top: 12, bottom: 40 })
@@ -414,7 +403,7 @@ struct CustomPlaylistPage {
                         }
                         .width('100%').padding(12)
                         .backgroundColor('#fff9f9f9').borderRadius(16)
-                      }, (item: Song) => `${item.id}_${this.refreshFlag}`)
+                      }, (item: Song) => item.id.toString())
                     }
                   }
                   .width('100%').padding({ left: 16, right: 16, top: 12, bottom: 40 })
